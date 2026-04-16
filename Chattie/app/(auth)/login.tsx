@@ -7,21 +7,64 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
+import axios from 'axios';
 import { useRouter } from 'expo-router';
+
+const getApiBaseUrl = () => {
+
+  return 'http://192.168.100.129:8000';
+ 
+};
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
+   const [message, setMessage] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
+
   const router = useRouter();
 
-  const handleLogin = () => {
-    Alert.alert('Login', 'Login pressed');
+  const handleLogin = async () => {
+    if (!email || !password) {
+      setMessage('Email and password are required.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await axios.post(`${getApiBaseUrl()}/api/login`, {
+        email,
+        password,
+      });
+      const resData = response.data;
+
+if (resData.token) {
+  router.push('/(tabs)/home');
+} else {
+  setMessage(resData.message || 'Login failed');
+}
+    
+
+      console.log(response.data);
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        setMessage(error.response.data.message);
+      } else if (error.message) {
+        setMessage(error.message);
+      } else {
+        setMessage('Login failed. Please try again.');
+      }
+      console.log(error);
+   
+    } finally {
+      setLoading(false);
+    }
   };
+
 
   return (
     <KeyboardAvoidingView
@@ -33,6 +76,9 @@ export default function LoginScreen() {
         <Text style={styles.subtitle}>Campus App</Text>
 
         <View style={styles.form}>
+          <Text style={{ color: 'red', textAlign: 'center', marginBottom: 10 }}>
+            {message}
+          </Text>
           <TextInput
             style={styles.input}
             placeholder="Email"
@@ -60,7 +106,7 @@ export default function LoginScreen() {
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.buttonText}>kkLogin</Text>
+              <Text style={styles.buttonText}>Login</Text>
             )}
           </TouchableOpacity>
 
