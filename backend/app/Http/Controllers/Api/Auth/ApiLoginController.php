@@ -30,13 +30,24 @@ class ApiLoginController extends Controller
             'message' => 'Invalid email or password',
         ]);
     }
-    $user =$request->user();
-    $token = $user->createToken(name:'auth_token')->plainTextToken;
+    $user =Auth::user();
+    $token = $user->createToken('auth_token')->plainTextToken;
      return response()->json([
         'status' => true,
         'message' => 'Login successful',
         'user'=>$user,
         'token' => $token,
+    ]);
+}
+public function logout(Request $request)
+{
+    $user = $request->user();
+
+    $user->tokens()->delete();
+    $user->delete();
+
+    return response()->json([
+        'message' => 'Account deleted'
     ]);
 }
 }

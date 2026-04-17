@@ -104,7 +104,7 @@ const handleRegister = async () => {
     const resData = response.data;
     if (resData.token) {
       setAuthData(resData);
-      router.replace("/(tabs)/home");
+      router.replace("/(tabs)");
     } else {
       Alert.alert('Registration Failed', resData.message || 'Registration failed');
     }

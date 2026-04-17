@@ -49,7 +49,7 @@ export default function Login() {
 
 if (resData.token) {
   setAuthData(resData);
-   router.replace("/(tabs)/home")
+   router.replace("/(tabs)")
   
 } else {
   setMessage(resData.message || 'Login failed');
