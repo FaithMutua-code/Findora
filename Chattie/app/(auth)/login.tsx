@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
+import { AuthContext } from '../../utils/AuthContext';
 
 const getApiBaseUrl = () => {
 
@@ -18,12 +19,16 @@ const getApiBaseUrl = () => {
  
 };
 
-export default function LoginScreen() {
+export default function Login() {
   const [email, setEmail] = useState('');
    const [message, setMessage] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('LoginScreen must be used within AuthProvider');
+  }
+  const { setAuthData } = context;
 
   const router = useRouter();
 
@@ -43,7 +48,9 @@ export default function LoginScreen() {
       const resData = response.data;
 
 if (resData.token) {
-  router.push('/(tabs)/home');
+  setAuthData(resData);
+   router.replace("/(tabs)/home");
+  
 } else {
   setMessage(resData.message || 'Login failed');
 }
@@ -114,9 +121,9 @@ if (resData.token) {
             onPress={() => router.push('/(auth)/register')}
             disabled={loading}
           >
-            <Text style={styles.link}>
-              Dont have an account? Register
-            </Text>
+           <Text style={styles.link}>
+            {"Don't have an account? Register"}
+          </Text>
           </TouchableOpacity>
         </View>
       </View>

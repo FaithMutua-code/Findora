@@ -1,9 +1,27 @@
 import { Stack } from "expo-router";
-export default function RootLayout() {
+import { StatusBar } from "expo-status-bar";
+import { AuthContext, AuthProvider } from "../utils/AuthContext";
+import { useContext } from "react";
+function RootLayoutNav() {
+  const context = useContext(AuthContext);
+  const authData = context?.authData;
   return (
     <Stack>
-      <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      {authData?.token == null ? (
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      ) : (
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      )}
     </Stack>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <StatusBar style="auto" />
+      
+      <RootLayoutNav />
+    </AuthProvider>
   );
 }
