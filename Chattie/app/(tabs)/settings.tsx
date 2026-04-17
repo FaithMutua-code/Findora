@@ -1,4 +1,4 @@
-import React, { useContext,useState,useEffect, use } from 'react';
+import React, { useContext,useState,useEffect } from 'react';
 import {
     Alert,
   View,
@@ -76,7 +76,7 @@ useEffect(() => {
     {
       title: 'Edit Profile',
       icon: 'person-outline',
-      onPress: () => {},
+      onPress: () =>router.push('/profile'),
     },
     {
       title: 'Notifications',
@@ -138,7 +138,7 @@ useEffect(() => {
           
         </View>
 
-        <Ionicons name="chevron-forward" size={20} color="#999" />
+       
       </View>
 
       {/* Settings List */}
