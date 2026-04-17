@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   View,
   Text,
@@ -12,20 +12,30 @@ import {
   ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { AuthContext } from '../../utils/AuthContext';
+import axios from 'axios';
 
+const getApiBaseUrl = () => {
 
+  return 'http://192.168.100.129:8000';
+ 
+};
 export default function RegisterScreen() {
   const [formData, setFormData] = useState({
     email: '',
     username: '',
     phone_number: '',
     password: '',
-    password2: '',
+    password_confirmation: '',
   });
   const [loading, setLoading] = useState(false);
   
   const router = useRouter();
-  const { register } = useAuth();
+const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('LoginScreen must be used within AuthProvider');
+  }
+  const { setAuthData } = context;
 
   const validateForm = () => {
     // Email validation
@@ -59,7 +69,7 @@ export default function RegisterScreen() {
     }
 
     // Confirm password
-    if (formData.password !== formData.password2) {
+    if (formData.password !== formData.password_confirmation) {
       Alert.alert('Error', 'Passwords do not match');
       return false;
     }
@@ -67,32 +77,63 @@ export default function RegisterScreen() {
     return true;
   };
 
-  const handleRegister = async () => {
-    if (!validateForm()) {
-      return;
-    }
+const handleRegister = async () => {
+  if (!validateForm()) {
+    return;
+  }
 
-    setLoading(true);
-    try {
-      console.log('📝 Starting registration...');
-      
-      await register(formData);
-      
-      // If successful, navigate to main app
-      router.replace('/(tabs)');
-      
-    } catch (error: any) {
-      console.log('❌ Registration failed:', error);
-      
-      // Show user-friendly error message
-      Alert.alert(
-        'Registration Failed',
-        error.message || 'Could not register. Please try again.'
-      );
-    } finally {
-      setLoading(false);
+  setLoading(true);
+  try {
+    const response = await axios.post(
+      `${getApiBaseUrl()}/api/register`,
+      {
+        name: formData.username,
+        email: formData.email,
+        phone_number: formData.phone_number,
+        password: formData.password,
+        password_confirmation: formData.password_confirmation,
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      }
+    );
+
+    const resData = response.data;
+    if (resData.token) {
+      setAuthData(resData);
+      router.replace("/(tabs)/home");
+    } else {
+      Alert.alert('Registration Failed', resData.message || 'Registration failed');
     }
-  };
+  } catch (error: any) {
+    console.log('❌ Registration failed:', error);
+    
+    // Show user-friendly error message
+    let errorMessage = 'Could not register. Please try again.';
+    
+    if (error.response) {
+      // Server responded with error status
+      errorMessage = error.response.data?.message || 
+                     error.response.data?.errors ? 
+                     Object.values(error.response.data.errors).flat().join('\n') : 
+                     `Server error: ${error.response.status}`;
+    } else if (error.request) {
+      // Request was made but no response
+      errorMessage = 'No response from server. Check your connection.';
+    } else {
+      // Something else happened
+      errorMessage = error.message || 'Registration failed';
+    }
+    
+    Alert.alert('Registration Failed', errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
+  
 
   return (
     <KeyboardAvoidingView
@@ -152,8 +193,8 @@ export default function RegisterScreen() {
             <TextInput
               style={styles.input}
               placeholder="Confirm Password"
-              value={formData.password2}
-              onChangeText={(text) => setFormData({...formData, password2: text})}
+              value={formData.password_confirmation}
+              onChangeText={(text) => setFormData({...formData, password_confirmation: text})}
               secureTextEntry
               editable={!loading}
               autoComplete="password-new"
