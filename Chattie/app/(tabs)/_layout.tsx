@@ -52,6 +52,7 @@ export default function DrawerLayout() {
           drawerActiveTintColor: '#6C5CE7',
           drawerInactiveTintColor: '#333',
           drawerStyle: { backgroundColor: '#fff' },
+          // headerShown: false,
         }}
       >
         <Drawer.Screen name="index" options={{ title: 'Dashboard' }} />

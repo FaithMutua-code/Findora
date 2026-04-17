@@ -15,6 +15,7 @@ import axios from 'axios';
 import { useRouter } from 'expo-router';
 import { AuthContext } from '../../utils/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const API = 'http://192.168.100.129:8000';
 
@@ -91,6 +92,7 @@ export default function ShareItemScreen() {
   };
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#f4f6f9' }}>
     <ScrollView style={styles.container}>
 
       <Text style={styles.header}>Share Item</Text>
@@ -180,6 +182,7 @@ export default function ShareItemScreen() {
       </TouchableOpacity>
 
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -279,6 +282,7 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: '#6C5CE7',
     padding: 15,
+    marginBottom: 50,
     borderRadius: 12,
     alignItems: 'center',
   },
