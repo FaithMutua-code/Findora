@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext,useState,useEffect, use } from 'react';
 import {
     Alert,
   View,
@@ -20,6 +20,8 @@ const getApiBaseUrl = () => {
 export default function SettingsScreen() {
   const router = useRouter();
   const context = useContext(AuthContext);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   if (!context) {
     throw new Error('useAuth must be used inside AuthProvider');
@@ -45,6 +47,30 @@ export default function SettingsScreen() {
       console.log(error);
     }
   };
+  const fetchUser = async () => {
+  try {
+    const response = await axios.get(
+      `${getApiBaseUrl()}/api/user`,
+      {
+        headers: {
+          Authorization: `Bearer ${authData?.token}`,
+        },
+      }
+    );
+
+    setUser(response.data);
+  } catch (error) {
+    console.log('Profile fetch error:', error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+useEffect(() => {
+    if (authData?.token) {
+        fetchUser();
+    }
+}, [authData]);
 
   const settingsItems = [
     {
@@ -107,8 +133,9 @@ export default function SettingsScreen() {
         </View>
 
         <View style={{ flex: 1 }}>
-          <Text style={styles.name}>Your Name</Text>
-          <Text style={styles.email}>youremail@gmail.com</Text>
+          <Text style={styles.name}>{loading ? 'Loading...' : user?.name || 'Your Name'}</Text>
+          <Text style={styles.email}>{loading ? 'Loading...' : user?.email || 'youremail@gmail.com'}</Text>
+          
         </View>
 
         <Ionicons name="chevron-forward" size={20} color="#999" />
