@@ -13,6 +13,7 @@ function CustomDrawerContent(props: any) {
     { label: 'Dashboard', route: 'index', icon: 'home' },
     { label: 'Home', route: 'home', icon: 'grid' },
     { label: 'Settings', route: 'settings', icon: 'settings' },
+    { label: 'Share Item', route: 'shareItem', icon: 'add-circle' },
   ];
 
   return (
@@ -56,6 +57,7 @@ export default function DrawerLayout() {
         <Drawer.Screen name="index" options={{ title: 'Dashboard' }} />
         <Drawer.Screen name="home" />
         <Drawer.Screen name="settings" />
+        <Drawer.Screen name="shareItem" />
       </Drawer>
     </GestureHandlerRootView>
   );
