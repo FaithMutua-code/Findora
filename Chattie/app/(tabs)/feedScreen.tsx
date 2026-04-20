@@ -10,6 +10,7 @@ import {
   Modal,
   TextInput,
   ScrollView,
+  RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
@@ -33,26 +34,6 @@ type Item = {
   created_at?: string;
 };
 
-type ApiResponse = {
-  status: boolean;
-  items: {
-    current_page: number;
-    data: Item[];
-    first_page_url: string;
-    from: number;
-    last_page: number;
-    last_page_url: string;
-    links: any[];
-    next_page_url: string | null;
-    path: string;
-    per_page: number;
-    prev_page_url: string | null;
-    to: number;
-    total: number;
-  };
-  totalPages: number;
-};
-
 const getApiBaseUrl = () => {
   return 'http://192.168.100.129:8000';
 };
@@ -60,11 +41,19 @@ const getApiBaseUrl = () => {
 export default function FeedScreen() {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [showPageModal, setShowPageModal] = useState(false);
   const [goToPage, setGoToPage] = useState('');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  
+  // Search and Filter States
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchType, setSearchType] = useState<'name' | 'location'>('name');
+  const [filterType, setFilterType] = useState<'all' | 'lost' | 'found'>('all');
+  const [showSearchModal, setShowSearchModal] = useState(false);
 
   const context = useContext(AuthContext);
   if (!context) {
@@ -73,72 +62,135 @@ export default function FeedScreen() {
 
   const { authData } = context;
 
-  const fetchItems = async (pageNumber = 1) => {
+  const fetchItems = useCallback(async (
+    pageNumber = 1, 
+    search: string = '', 
+    searchBy: string = 'name',
+    filter: string = 'all'
+  ) => {
     try {
       setLoading(true);
+      setErrorMessage(null);
 
-      const response = await axios.get<ApiResponse>(`${getApiBaseUrl()}/api/items`, {
-        params: {
-          page: pageNumber
-        },
+      const params: any = {
+        page: pageNumber,
+      };
+
+      if (search.trim()) {
+        params.search = search;
+        params.search_by = searchBy;
+      }
+
+      if (filter !== 'all') {
+        params.type = filter;
+      }
+
+      const response = await axios.get(`${getApiBaseUrl()}/api/items`, {
         headers: {
           Authorization: `Bearer ${authData?.token}`,
         },
+          params,
+  
       });
 
-      const paginatedItems = response.data.items;
-      const newItems = paginatedItems.data;
-      const totalPagesFromApi = response.data.totalPages || paginatedItems.last_page;
-      
-      setItems(newItems);
+      let extractedItems: Item[] = [];
+      let totalPagesFromApi = 1;
+      let totalItemsCount = 0;
+
+      if (response.data.items) {
+        if (Array.isArray(response.data.items)) {
+          extractedItems = response.data.items;
+          totalPagesFromApi = response.data.totalPages || 1;
+          totalItemsCount = extractedItems.length;
+        } else if (response.data.items.data && Array.isArray(response.data.items.data)) {
+          extractedItems = response.data.items.data;
+          totalPagesFromApi = response.data.totalPages || response.data.items.last_page || 1;
+          totalItemsCount = response.data.items.total || extractedItems.length;
+        }
+      }
+
+      setItems(extractedItems);
       setTotalPages(totalPagesFromApi);
-      setTotalItems(paginatedItems.total);
+      setTotalItems(totalItemsCount);
       setCurrentPage(pageNumber);
+
+      if (extractedItems.length === 0 && search.trim()) {
+        setErrorMessage(`No items found matching "${search}"`);
+      } else if (extractedItems.length === 0) {
+        setErrorMessage('No items found. Try creating some items first!');
+      }
 
     } catch (error: unknown) {
       const err = error as any;
-      console.log('Feed error:', err.response?.data || err.message);
+      console.log('Feed error:', err);
+      setErrorMessage(err.response?.data?.message || err.message || 'Failed to load items');
+      setItems([]);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, [authData?.token]);
 
-  const goToFirstPage = () => {
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setSearchQuery('');
+    setFilterType('all');
+    fetchItems(1, '', 'name', 'all');
+  }, [fetchItems]);
+
+  const handleSearch = useCallback(() => {
+    setShowSearchModal(false);
+    fetchItems(1, searchQuery, searchType, filterType);
+  }, [fetchItems, searchQuery, searchType, filterType]);
+
+  const handleFilter = useCallback((filter: 'all' | 'lost' | 'found') => {
+    setFilterType(filter);
+    fetchItems(1, searchQuery, searchType, filter);
+  }, [fetchItems, searchQuery, searchType]);
+
+  const clearSearch = useCallback(() => {
+    setSearchQuery('');
+    setSearchType('name');
+    setFilterType('all');
+    fetchItems(1, '', 'name', 'all');
+  }, [fetchItems]);
+
+  const goToFirstPage = useCallback(() => {
     if (currentPage !== 1) {
-      fetchItems(1);
+      fetchItems(1, searchQuery, searchType, filterType);
     }
-  };
+  }, [currentPage, fetchItems, searchQuery, searchType, filterType]);
 
-  const goToLastPage = () => {
+  const goToLastPage = useCallback(() => {
     if (currentPage !== totalPages) {
-      fetchItems(totalPages);
+      fetchItems(totalPages, searchQuery, searchType, filterType);
     }
-  };
+  }, [currentPage, totalPages, fetchItems, searchQuery, searchType, filterType]);
 
-  const goToPreviousPage = () => {
+  const goToPreviousPage = useCallback(() => {
     if (currentPage > 1) {
-      fetchItems(currentPage - 1);
+      fetchItems(currentPage - 1, searchQuery, searchType, filterType);
     }
-  };
+  }, [currentPage, fetchItems, searchQuery, searchType, filterType]);
 
-  const goToNextPage = () => {
+  const goToNextPage = useCallback(() => {
     if (currentPage < totalPages) {
-      fetchItems(currentPage + 1);
+      fetchItems(currentPage + 1, searchQuery, searchType, filterType);
     }
-  };
+  }, [currentPage, totalPages, fetchItems, searchQuery, searchType, filterType]);
 
-  const handleGoToPage = () => {
+  const handleGoToPage = useCallback(() => {
     const pageNum = parseInt(goToPage);
     if (pageNum >= 1 && pageNum <= totalPages) {
-      fetchItems(pageNum);
+      fetchItems(pageNum, searchQuery, searchType, filterType);
       setShowPageModal(false);
       setGoToPage('');
     }
-  };
+  }, [goToPage, totalPages, fetchItems, searchQuery, searchType, filterType]);
 
   useEffect(() => {
-    fetchItems(1);
-  }, []);
+    fetchItems(1, '', 'name', 'all');
+  }, [fetchItems]);
 
   const renderItem = ({ item }: { item: Item }) => (
     <View style={styles.card}>
@@ -194,10 +246,74 @@ export default function FeedScreen() {
     </View>
   );
 
+  const renderHeader = () => (
+    <View style={styles.headerContainer}>
+      {/* Search Bar */}
+      <TouchableOpacity 
+        style={styles.searchBar}
+        onPress={() => setShowSearchModal(true)}
+      >
+        <Ionicons name="search-outline" size={20} color="#666" />
+        <Text style={styles.searchPlaceholder}>
+          {searchQuery ? `Search: ${searchQuery}` : 'Search by name or location...'}
+        </Text>
+        {searchQuery && (
+          <TouchableOpacity onPress={clearSearch}>
+            <Ionicons name="close-circle" size={20} color="#666" />
+          </TouchableOpacity>
+        )}
+      </TouchableOpacity>
+
+      {/* Filter Chips */}
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        style={styles.filterContainer}
+      >
+        <TouchableOpacity
+          style={[styles.filterChip, filterType === 'all' && styles.filterChipActive]}
+          onPress={() => handleFilter('all')}
+        >
+          <Text style={[styles.filterChipText, filterType === 'all' && styles.filterChipTextActive]}>
+            All Items
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.filterChip, filterType === 'lost' && styles.filterChipActive]}
+          onPress={() => handleFilter('lost')}
+        >
+          <Ionicons name="alert-circle-outline" size={16} color={filterType === 'lost' ? '#fff' : '#ff6b6b'} />
+          <Text style={[styles.filterChipText, filterType === 'lost' && styles.filterChipTextActive]}>
+            Lost Items
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.filterChip, filterType === 'found' && styles.filterChipActive]}
+          onPress={() => handleFilter('found')}
+        >
+          <Ionicons name="checkmark-circle-outline" size={16} color={filterType === 'found' ? '#fff' : '#51cf66'} />
+          <Text style={[styles.filterChipText, filterType === 'found' && styles.filterChipTextActive]}>
+            Found Items
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+
+      {/* Results Info */}
+      {totalItems > 0 && (
+        <View style={styles.resultsInfo}>
+          <Text style={styles.resultsInfoText}>
+            Found {totalItems} item{totalItems !== 1 ? 's' : ''}
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+
   const renderPagination = () => {
     if (totalPages <= 1) return null;
 
-    // Calculate which page numbers to show
     let startPage = Math.max(1, currentPage - 2);
     let endPage = Math.min(totalPages, currentPage + 2);
     
@@ -223,7 +339,6 @@ export default function FeedScreen() {
         </View>
 
         <View style={styles.paginationControls}>
-          {/* First Page Button - Using play-skip-back instead */}
           <TouchableOpacity 
             style={[styles.paginationButton, currentPage === 1 && styles.paginationButtonDisabled]}
             onPress={goToFirstPage}
@@ -232,7 +347,6 @@ export default function FeedScreen() {
             <Ionicons name="play-skip-back" size={20} color={currentPage === 1 ? "#ccc" : "#6C5CE7"} />
           </TouchableOpacity>
 
-          {/* Previous Page Button */}
           <TouchableOpacity 
             style={[styles.paginationButton, currentPage === 1 && styles.paginationButtonDisabled]}
             onPress={goToPreviousPage}
@@ -244,13 +358,12 @@ export default function FeedScreen() {
             </Text>
           </TouchableOpacity>
 
-          {/* Page Numbers */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pageNumbersContainer}>
             {startPage > 1 && (
               <>
                 <TouchableOpacity 
                   style={styles.pageNumberButton}
-                  onPress={() => fetchItems(1)}
+                  onPress={() => fetchItems(1, searchQuery, searchType, filterType)}
                 >
                   <Text style={styles.pageNumberText}>1</Text>
                 </TouchableOpacity>
@@ -265,7 +378,7 @@ export default function FeedScreen() {
                   styles.pageNumberButton,
                   currentPage === pageNum && styles.pageNumberButtonActive
                 ]}
-                onPress={() => fetchItems(pageNum)}
+                onPress={() => fetchItems(pageNum, searchQuery, searchType, filterType)}
               >
                 <Text style={[
                   styles.pageNumberText,
@@ -281,7 +394,7 @@ export default function FeedScreen() {
                 {endPage < totalPages - 1 && <Text style={styles.pageDots}>...</Text>}
                 <TouchableOpacity 
                   style={styles.pageNumberButton}
-                  onPress={() => fetchItems(totalPages)}
+                  onPress={() => fetchItems(totalPages, searchQuery, searchType, filterType)}
                 >
                   <Text style={styles.pageNumberText}>{totalPages}</Text>
                 </TouchableOpacity>
@@ -289,7 +402,6 @@ export default function FeedScreen() {
             )}
           </ScrollView>
 
-          {/* Next Page Button */}
           <TouchableOpacity 
             style={[styles.paginationButton, currentPage === totalPages && styles.paginationButtonDisabled]}
             onPress={goToNextPage}
@@ -301,7 +413,6 @@ export default function FeedScreen() {
             <Ionicons name="chevron-forward" size={20} color={currentPage === totalPages ? "#ccc" : "#6C5CE7"} />
           </TouchableOpacity>
 
-          {/* Last Page Button - Using play-skip-forward instead */}
           <TouchableOpacity 
             style={[styles.paginationButton, currentPage === totalPages && styles.paginationButtonDisabled]}
             onPress={goToLastPage}
@@ -310,7 +421,6 @@ export default function FeedScreen() {
             <Ionicons name="play-skip-forward" size={20} color={currentPage === totalPages ? "#ccc" : "#6C5CE7"} />
           </TouchableOpacity>
 
-          {/* Go to Page Button */}
           <TouchableOpacity 
             style={styles.goToPageButton}
             onPress={() => setShowPageModal(true)}
@@ -323,22 +433,38 @@ export default function FeedScreen() {
   };
 
   const renderEmpty = () => {
-    if (!loading && items.length === 0) {
-      return (
-        <View style={styles.emptyContainer}>
-          <Ionicons name="cube-outline" size={64} color="#ccc" />
-          <Text style={styles.emptyText}>No items found</Text>
-          <Text style={styles.emptySubtext}>Be the first to post a lost or found item!</Text>
-        </View>
-      );
-    }
-    return null;
+    if (loading) return null;
+    
+    return (
+      <View style={styles.emptyContainer}>
+        <Ionicons name="cube-outline" size={64} color="#ccc" />
+        <Text style={styles.emptyText}>No items found</Text>
+        <Text style={styles.emptySubtext}>
+          {searchQuery 
+            ? `No items matching "${searchQuery}"` 
+            : 'Be the first to post a lost or found item!'}
+        </Text>
+      </View>
+    );
   };
 
   if (loading && items.length === 0) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#6C5CE7" />
+        <Text style={styles.loadingText}>Loading items...</Text>
+      </View>
+    );
+  }
+
+  if (errorMessage && items.length === 0) {
+    return (
+      <View style={styles.center}>
+        <Ionicons name="alert-circle-outline" size={64} color="#ff6b6b" />
+        <Text style={styles.errorText}>{errorMessage}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={() => fetchItems(1, '', 'name', 'all')}>
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -347,13 +473,90 @@ export default function FeedScreen() {
     <View style={styles.container}>
       <FlatList
         data={items}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
         renderItem={renderItem}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
+        ListHeaderComponent={renderHeader}
         ListEmptyComponent={renderEmpty}
         ListFooterComponent={renderPagination}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#6C5CE7']}
+          />
+        }
       />
+
+      {/* Search Modal */}
+      <Modal
+        visible={showSearchModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowSearchModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.searchModalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Search Items</Text>
+              <TouchableOpacity onPress={() => setShowSearchModal(false)}>
+                <Ionicons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Search Type Selector */}
+            <View style={styles.searchTypeContainer}>
+              <TouchableOpacity
+                style={[styles.searchTypeButton, searchType === 'name' && styles.searchTypeButtonActive]}
+                onPress={() => setSearchType('name')}
+              >
+                <Text style={[styles.searchTypeText, searchType === 'name' && styles.searchTypeTextActive]}>
+                  By Name
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.searchTypeButton, searchType === 'location' && styles.searchTypeButtonActive]}
+                onPress={() => setSearchType('location')}
+              >
+                <Text style={[styles.searchTypeText, searchType === 'location' && styles.searchTypeTextActive]}>
+                  By Location
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Search Input */}
+            <TextInput
+              style={styles.searchInput}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder={`Search ${searchType === 'name' ? 'by user name' : 'by location'}...`}
+              placeholderTextColor="#999"
+              autoFocus={true}
+              onSubmitEditing={handleSearch}
+            />
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => {
+                  setShowSearchModal(false);
+                  setSearchQuery('');
+                }}
+              >
+                <Text style={styles.cancelButtonText}>Clear</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.confirmButton]}
+                onPress={handleSearch}
+              >
+                <Text style={styles.confirmButtonText}>Search</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Go to Page Modal */}
       <Modal
@@ -424,11 +627,82 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#f5f5f5',
+    padding: 20,
   },
 
   listContainer: {
     padding: 12,
     flexGrow: 1,
+  },
+
+  headerContainer: {
+    marginBottom: 12,
+  },
+
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    gap: 8,
+  },
+
+  searchPlaceholder: {
+    flex: 1,
+    fontSize: 14,
+    color: '#666',
+  },
+
+  filterContainer: {
+    flexDirection: 'row',
+    marginBottom: 12,
+  },
+
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 8,
+    gap: 6,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 1,
+  },
+
+  filterChipActive: {
+    backgroundColor: '#6C5CE7',
+  },
+
+  filterChipText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+
+  filterChipTextActive: {
+    color: '#fff',
+  },
+
+  resultsInfo: {
+    paddingHorizontal: 4,
+    marginBottom: 8,
+  },
+
+  resultsInfoText: {
+    fontSize: 12,
+    color: '#999',
   },
 
   card: {
@@ -538,7 +812,6 @@ const styles = StyleSheet.create({
     color: '#666',
   },
 
-  // Pagination Styles
   paginationContainer: {
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -644,12 +917,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  // Modal Styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+
+  searchModalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    width: '90%',
+    maxWidth: 400,
   },
 
   modalContent: {
@@ -677,6 +957,43 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginBottom: 16,
+  },
+
+  searchTypeContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+
+  searchTypeButton: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: '#f5f5f5',
+    alignItems: 'center',
+  },
+
+  searchTypeButtonActive: {
+    backgroundColor: '#6C5CE7',
+  },
+
+  searchTypeText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+
+  searchTypeTextActive: {
+    color: '#fff',
+  },
+
+  searchInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    marginBottom: 20,
   },
 
   pageInput: {
@@ -738,5 +1055,31 @@ const styles = StyleSheet.create({
     color: '#bbb',
     marginTop: 8,
     textAlign: 'center',
+  },
+
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#666',
+  },
+
+  errorText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#ff6b6b',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+
+  retryButton: {
+    backgroundColor: '#6C5CE7',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+
+  retryButtonText: {
+    color: '#fff',
+    fontWeight: '600',
   },
 });

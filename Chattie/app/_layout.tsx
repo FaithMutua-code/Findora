@@ -10,6 +10,7 @@ function RootLayoutNav() {
      <StatusBar style="light" backgroundColor="#6C5CE7" />
     <Stack>
       {authData?.token == null ? (
+        
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       ) : (
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
