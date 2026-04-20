@@ -11,6 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { AuthContext } from '../../utils/AuthContext';
+import { ScrollView } from 'react-native-gesture-handler';
 type User = {
   id: number;
   name: string;
@@ -72,7 +73,8 @@ export default function FeedScreen() {
     );
   }
 const renderItem = ({ item }: { item: Item }) => (
-    <View style={styles.card}>
+    <ScrollView style={styles.card}>
+     
 
       {/* USER INFO */}
       <View style={styles.header}>
@@ -117,7 +119,8 @@ const renderItem = ({ item }: { item: Item }) => (
           <Ionicons name="share-outline" size={22} />
         </TouchableOpacity>
       </View>
-    </View>
+   
+    </ScrollView>
   );
 
   return (
