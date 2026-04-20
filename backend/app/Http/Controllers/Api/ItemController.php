@@ -8,23 +8,26 @@ use App\Models\Item;
 
 class ItemController extends Controller
 {
-public function index()
-{
-    $items = Item::with('user')
-        ->latest()
-        ->get()
-        ->map(function ($item) {
+  public function index()
+    {
+        $items = Item::with('user')
+            ->latest()
+            ->paginate(8);
+        
+        // Transform the items to add image URLs
+        $items->getCollection()->transform(function ($item) {
             if ($item->image) {
                 $item->image = asset('storage/' . $item->image);
             }
             return $item;
         });
 
-    return response()->json([
-        'status' => true,
-        'items' => $items
-    ]);
-}
+        return response()->json([
+            'status' => true,
+            'items' => $items, // This is already a paginator object
+            'totalPages' => $items->lastPage()
+        ]);
+    }
     public function store(Request $request)
     {
         $data = $request->validate([

@@ -62,7 +62,7 @@ export default function DrawerLayout() {
         }}
       >
         <Drawer.Screen name="index" options={{ title: 'Dashboard' }} />
-        <Drawer.Screen name="home" />
+        <Drawer.Screen name="feedScreen" />
         <Drawer.Screen name="settings" />
         <Drawer.Screen name="shareItem" />
       </Drawer>
