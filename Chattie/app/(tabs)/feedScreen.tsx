@@ -15,7 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { AuthContext } from '../../utils/AuthContext';
-
+import { SafeAreaView } from 'react-native-safe-area-context';
 type User = {
   id: number;
   name: string;
@@ -470,7 +470,7 @@ export default function FeedScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <FlatList
         data={items}
         keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
@@ -612,7 +612,7 @@ export default function FeedScreen() {
           </View>
         </TouchableOpacity>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -620,6 +620,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+    paddingTop: 20,
   },
 
   center: {

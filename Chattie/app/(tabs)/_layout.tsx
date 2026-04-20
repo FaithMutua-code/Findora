@@ -1,100 +1,90 @@
 import React from 'react';
-import { Drawer } from 'expo-router/drawer';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import {
-  DrawerContentScrollView,
-  DrawerItem,
-} from '@react-navigation/drawer';
+import { Tabs } from 'expo-router';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from "expo-status-bar";
-
-function CustomDrawerContent(props: any) {
-  const menuItems = [
-    { label: 'Dashboard', route: 'index', icon: 'home' },
-    { label: 'items', route: 'feedScreen', icon: 'grid' },
-    { label: 'Settings', route: 'settings', icon: 'settings' },
-    { label: 'Share Item', route: 'shareItem', icon: 'add-circle' },
-  ];
-
+import { SafeAreaView } from 'react-native-safe-area-context';
+export default function TabLayout() {
   return (
     <>
-        <StatusBar style="light" backgroundColor="#6C5CE7" />
-    <DrawerContentScrollView {...props} style={styles.drawer}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.appName}>Lost & Found</Text>
-        <Text style={styles.tagline}>Find what you lost, and get found!</Text>
-      </View>
+     <SafeAreaView style={{ flex: 1, backgroundColor: '#6C5CE7' }}>
+      <StatusBar style="light" />
 
-      {/* Menu Items */}
-      {menuItems.map((item, index) => (
-        <DrawerItem
-          key={index}
-          label={item.label}
-          labelStyle={styles.label}
-          onPress={() => props.navigation.navigate(item.route)}
-          icon={({ size }) => (
-            <Ionicons name={item.icon as any} size={size} color="#6C5CE7" />
-          )}
-        />
-      ))}
-    </DrawerContentScrollView>
-    </>
-  );
-}
-
-export default function DrawerLayout() {
-  return (
-    
-
-    <GestureHandlerRootView style={styles.container}>
-      <Drawer
-        drawerContent={(props) => <CustomDrawerContent {...props} />}
+      <Tabs
         screenOptions={{
+          headerShown: false,
           headerStyle: { backgroundColor: '#fff' },
           headerTintColor: '#6C5CE7',
           headerTitleStyle: { fontWeight: 'bold' },
-          drawerActiveTintColor: '#6C5CE7',
-          drawerInactiveTintColor: '#333',
-          drawerStyle: { backgroundColor: '#fff' },
-          // headerShown: false,
+          tabBarActiveTintColor: '#6C5CE7',
+          tabBarInactiveTintColor: '#333',
+          tabBarStyle: {
+            backgroundColor: '#fff',
+            borderTopWidth: 1,
+            borderTopColor: '#ddd',
+            height: 60,
+            paddingBottom: 8,
+            paddingTop: 8,
+            borderTopEndRadius: 15,
+            borderTopStartRadius: 15,
+            position: 'absolute',
+          },
+          tabBarLabelStyle: {
+            fontWeight: '600',
+            fontSize: 12,
+          },
         }}
       >
-        <Drawer.Screen name="index" options={{ title: 'Dashboard' }} />
-        <Drawer.Screen name="feedScreen" />
-        <Drawer.Screen name="settings" />
-        <Drawer.Screen name="shareItem" />
-      </Drawer>
-    </GestureHandlerRootView>
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: 'Home',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="home" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="feedScreen"
+          options={{
+            title: 'Items',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="grid" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="settings"
+          options={{
+            title: 'Settings',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="settings" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="shareItem"
+          options={{
+            title: 'Share',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="add-circle" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+  name="profile"
+  options={{
+    href: null, // 👈 hides it from tab bar
+  }}
+/>
+      </Tabs>
+      </SafeAreaView>
+    </>
   );
-
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  drawer: {
-    backgroundColor: '#fff',
-  },
-  header: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-  },
-  appName: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#000',
-  },
-  tagline: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
-  },
-  label: {
-    fontWeight: '600',
-    color: '#333',
   },
 });
