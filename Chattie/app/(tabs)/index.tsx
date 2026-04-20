@@ -1,16 +1,18 @@
 
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text,ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function WelcomeScreen() {
   const router = useRouter();
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
       
-      {/* Background Design */}
+    <ScrollView>
+        {/* Background Design */}
       <View style={styles.topGradient} />
       
       {/* Logo and Title */}
@@ -55,30 +57,14 @@ export default function WelcomeScreen() {
         </View>
       </View>
 
-      {/* Action Buttons */}
-      <View style={styles.buttonsSection}>
-        <TouchableOpacity 
-          style={styles.loginButton}
-          onPress={() => router.push('/(auth)/login')}
-        >
-          <Text style={styles.loginButtonText}>Login</Text>
-        </TouchableOpacity>
+    
+    
 
-        <TouchableOpacity 
-          style={styles.registerButton}
-          onPress={() => router.push('/(auth)/register')}
-        >
-          <Text style={styles.registerButtonText}>Create Account</Text>
-        </TouchableOpacity>
-      </View>
+       
 
-      {/* Footer */}
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>
-          Join your campus community in reuniting lost items
-        </Text>
-      </View>
-    </View>
+     
+    </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -104,8 +90,8 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   logoContainer: {
-    width: 120,
-    height: 120,
+    width: 90,
+    height: 90,
     borderRadius: 60,
     backgroundColor: '#007AFF',
     justifyContent: 'center',
