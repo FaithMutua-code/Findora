@@ -11,6 +11,8 @@ import {
   TextInput,
   ScrollView,
   RefreshControl,
+  Share,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
@@ -192,7 +194,19 @@ export default function FeedScreen() {
     fetchItems(1, '', 'name', 'all');
   }, [fetchItems]);
 
-  const renderItem = ({ item }: { item: Item }) => (
+
+  const renderItem = ({ item }: { item: Item }) => {
+      const handleShare = async () => {
+  try {
+    await Share.share({
+      title: item.title,
+      message: `🔍 ${item.type === 'lost' ? 'Lost' : 'Found'}: ${item.title}\n📍 ${item.location}\n\n${item.description}`,
+    });
+  } catch (error) {
+    Alert.alert('Error', 'Could not share this item');
+  }
+};
+return(
     <View style={styles.card}>
       {/* USER INFO */}
       <View style={styles.header}>
@@ -238,13 +252,14 @@ export default function FeedScreen() {
           <Text style={styles.actionText}>Message</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionBtn}>
+        <TouchableOpacity style={styles.actionBtn} onPress={handleShare}>
           <Ionicons name="share-outline" size={22} color="#666" />
           <Text style={styles.actionText}>Share</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
+}
 
   const renderHeader = () => (
     <View style={styles.headerContainer}>
