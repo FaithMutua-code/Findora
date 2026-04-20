@@ -1,4 +1,4 @@
-import React, { useState, useContext, useRef, useEffect } from 'react';
+import React, { useState, useContext, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   Image,
   Alert,
   ActivityIndicator,
-  Platform,
+  ScrollView,
 } from 'react-native';
 
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -18,11 +18,17 @@ import { useRouter } from 'expo-router';
 import { AuthContext } from '../../utils/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-const getApiBaseUrl = () => {
 
-  return 'http://192.168.100.129:8000';
- 
-};
+const getApiBaseUrl = () => 'http://192.168.100.129:8000';
+
+const CATEGORIES = [
+  'Keys', 'Wallet', 'Phone', 'Bag',
+  'Laptop', 'Earphones', 'Charger', 'Camera',
+  'Clothing', 'Shoes', 'Watch', 'Jewelry',
+  'ID / Passport', 'Driver\'s License', 'Bank Card', 'Documents',
+  'Pet', 'Toy', 'Books', 'Other',
+];
+
 export default function ShareItemScreen() {
   const router = useRouter();
   const context = useContext(AuthContext);
@@ -42,10 +48,8 @@ export default function ShareItemScreen() {
     type: 'lost',
   });
 
-  // refs for auto-next focus
-const descRef = useRef<TextInput | null>(null);
-const categoryRef = useRef<TextInput | null>(null);
-const locationRef = useRef<TextInput | null>(null);
+  const descRef = useRef<TextInput | null>(null);
+  const locationRef = useRef<TextInput | null>(null);
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -65,13 +69,18 @@ const locationRef = useRef<TextInput | null>(null);
       return;
     }
 
+    if (!form.category) {
+      Alert.alert('Error', 'Please select a category');
+      return;
+    }
+
     setLoading(true);
 
     try {
       const data = new FormData();
       data.append('title', form.title);
       data.append('description', form.description);
-      data.append('category', form.category || 'General');
+      data.append('category', form.category);
       data.append('location', form.location);
       data.append('type', form.type);
 
@@ -102,7 +111,7 @@ const locationRef = useRef<TextInput | null>(null);
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f4f6f9' }}>
       <KeyboardAwareScrollView
-        contentContainerStyle={{ padding: 20, paddingBottom: 50 }}
+        contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
         enableOnAndroid={true}
         extraScrollHeight={20}
         keyboardShouldPersistTaps="handled"
@@ -113,9 +122,7 @@ const locationRef = useRef<TextInput | null>(null);
         {/* IMAGE */}
         <TouchableOpacity style={styles.imageCard} onPress={pickImage}>
           {image ? (
-            <>
-              <Image source={{ uri: image }} style={styles.image} />
-            </>
+            <Image source={{ uri: image }} style={styles.image} />
           ) : (
             <View style={styles.imagePlaceholder}>
               <Ionicons name="camera-outline" size={30} color="#777" />
@@ -163,24 +170,36 @@ const locationRef = useRef<TextInput | null>(null);
             multiline
             value={form.description}
             onChangeText={(t) => setForm({ ...form, description: t })}
-            returnKeyType="next"
-            onSubmitEditing={() => categoryRef.current?.focus()}
           />
 
-          <TextInput
-            ref={categoryRef}
-            placeholder="Category"
-            style={styles.input}
-            value={form.category}
-            onChangeText={(t) => setForm({ ...form, category: t })}
-            returnKeyType="next"
-            onSubmitEditing={() => locationRef.current?.focus()}
-          />
+          {/* CATEGORY CHIPS */}
+          <Text style={styles.categoryLabel}>Category *</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.chipsScroll}
+            contentContainerStyle={styles.chipsContainer}
+          >
+            {CATEGORIES.map((cat) => (
+              <TouchableOpacity
+                key={cat}
+                style={[
+                  styles.chip,
+                  form.category === cat && styles.chipActive,
+                ]}
+                onPress={() => setForm({ ...form, category: cat })}
+              >
+                <Text style={form.category === cat ? styles.chipTextActive : styles.chipText}>
+                  {cat}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
 
           <TextInput
             ref={locationRef}
             placeholder="Location *"
-            style={styles.input}
+            style={[styles.input, { marginTop: 12 }]}
             value={form.location}
             onChangeText={(t) => setForm({ ...form, location: t })}
           />
@@ -204,23 +223,15 @@ const locationRef = useRef<TextInput | null>(null);
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f4f6f9',
-    padding: 20,
-  },
-
   header: {
     fontSize: 28,
     fontWeight: '700',
     color: '#111',
   },
-
   sub: {
     color: '#666',
     marginBottom: 15,
   },
-
   imageCard: {
     height: 200,
     backgroundColor: '#fff',
@@ -230,30 +241,17 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     overflow: 'hidden',
   },
-
   image: {
     width: '100%',
     height: '100%',
   },
-
   imagePlaceholder: {
     alignItems: 'center',
   },
-
-  removeBtn: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    padding: 6,
-    borderRadius: 20,
-  },
-
   toggleRow: {
     flexDirection: 'row',
     marginBottom: 15,
   },
-
   toggle: {
     flex: 1,
     padding: 12,
@@ -262,40 +260,66 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
   },
-
   toggleActive: {
     backgroundColor: '#6C5CE7',
   },
-
   toggleText: {
     color: '#333',
     fontWeight: '600',
   },
-
   toggleTextActive: {
     color: '#fff',
     fontWeight: '600',
   },
-
   card: {
     backgroundColor: '#fff',
     padding: 15,
     borderRadius: 16,
     marginBottom: 20,
   },
-
   input: {
     backgroundColor: '#f5f5f5',
     padding: 12,
     borderRadius: 10,
     marginBottom: 12,
   },
-
   textArea: {
     height: 100,
     textAlignVertical: 'top',
   },
-
+  categoryLabel: {
+    fontSize: 13,
+    color: '#888',
+    marginBottom: 8,
+    fontWeight: '500',
+  },
+  chipsScroll: {
+    marginBottom: 4,
+  },
+  chipsContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingVertical: 4,
+  },
+  chip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 20,
+  },
+  chipActive: {
+    backgroundColor: '#6C5CE7',
+  },
+  chipText: {
+    color: '#444',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  chipTextActive: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
+  },
   button: {
     backgroundColor: '#6C5CE7',
     padding: 15,
@@ -303,7 +327,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
   },
-
   buttonText: {
     color: '#fff',
     fontWeight: '700',
