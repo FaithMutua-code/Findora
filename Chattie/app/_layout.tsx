@@ -6,6 +6,8 @@ function RootLayoutNav() {
   const context = useContext(AuthContext);
   const authData = context?.authData;
   return (
+    <>
+     <StatusBar style="light" backgroundColor="#6C5CE7" />
     <Stack>
       {authData?.token == null ? (
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
@@ -13,14 +15,14 @@ function RootLayoutNav() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       )}
     </Stack>
+    </>
   );
 }
 
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <StatusBar style="auto" />
-      
+        
       <RootLayoutNav />
     </AuthProvider>
   );

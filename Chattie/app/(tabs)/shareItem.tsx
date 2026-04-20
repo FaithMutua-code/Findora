@@ -1,24 +1,28 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useRef, useEffect } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  ScrollView,
   Image,
   Alert,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
+
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
 import { AuthContext } from '../../utils/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+const getApiBaseUrl = () => {
 
-const API = 'http://192.168.100.129:8000';
-
+  return 'http://192.168.100.129:8000';
+ 
+};
 export default function ShareItemScreen() {
   const router = useRouter();
   const context = useContext(AuthContext);
@@ -35,8 +39,13 @@ export default function ShareItemScreen() {
     description: '',
     category: '',
     location: '',
-    type: 'lost', // lost | found
+    type: 'lost',
   });
+
+  // refs for auto-next focus
+const descRef = useRef<TextInput | null>(null);
+const categoryRef = useRef<TextInput | null>(null);
+const locationRef = useRef<TextInput | null>(null);
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -49,8 +58,6 @@ export default function ShareItemScreen() {
       setImage(result.assets[0].uri);
     }
   };
-
-  const removeImage = () => setImage(null);
 
   const handleSubmit = async () => {
     if (!form.title || !form.description || !form.location) {
@@ -76,14 +83,15 @@ export default function ShareItemScreen() {
         } as any);
       }
 
-      await axios.post(`${API}/api/items`, data, {
+      await axios.post(`${getApiBaseUrl()}/api/items`, data, {
         headers: {
           Authorization: `Bearer ${authData?.token}`,
+          'Content-Type': 'multipart/form-data',
         },
       });
 
       Alert.alert('Success', 'Item posted successfully');
-      router.back();
+      router.navigate('/(tabs)/feedScreen');
     } catch (error) {
       Alert.alert('Error', 'Failed to post item');
     } finally {
@@ -93,95 +101,104 @@ export default function ShareItemScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f4f6f9' }}>
-    <ScrollView style={styles.container}>
-
-      <Text style={styles.header}>Share Item</Text>
-      <Text style={styles.sub}>Help others find lost items</Text>
-
-      {/* IMAGE CARD */}
-      <TouchableOpacity style={styles.imageCard} onPress={pickImage}>
-        {image ? (
-          <>
-            <Image source={{ uri: image }} style={styles.image} />
-            <TouchableOpacity style={styles.removeBtn} onPress={removeImage}>
-              <Ionicons name="close" size={20} color="#fff" />
-            </TouchableOpacity>
-          </>
-        ) : (
-          <View style={styles.imagePlaceholder}>
-            <Ionicons name="camera-outline" size={30} color="#777" />
-            <Text style={{ color: '#777', marginTop: 5 }}>Add Photo</Text>
-          </View>
-        )}
-      </TouchableOpacity>
-
-      {/* TYPE TOGGLE */}
-      <View style={styles.toggleRow}>
-        <TouchableOpacity
-          style={[styles.toggle, form.type === 'lost' && styles.toggleActive]}
-          onPress={() => setForm({ ...form, type: 'lost' })}
-        >
-          <Text style={form.type === 'lost' ? styles.toggleTextActive : styles.toggleText}>
-            Lost
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.toggle, form.type === 'found' && styles.toggleActive]}
-          onPress={() => setForm({ ...form, type: 'found' })}
-        >
-          <Text style={form.type === 'found' ? styles.toggleTextActive : styles.toggleText}>
-            Found
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* INPUTS */}
-      <View style={styles.card}>
-        <TextInput
-          placeholder="Title *"
-          style={styles.input}
-          value={form.title}
-          onChangeText={(t) => setForm({ ...form, title: t })}
-        />
-
-        <TextInput
-          placeholder="Description *"
-          style={[styles.input, styles.textArea]}
-          multiline
-          value={form.description}
-          onChangeText={(t) => setForm({ ...form, description: t })}
-        />
-
-        <TextInput
-          placeholder="Category"
-          style={styles.input}
-          value={form.category}
-          onChangeText={(t) => setForm({ ...form, category: t })}
-        />
-
-        <TextInput
-          placeholder="Location *"
-          style={styles.input}
-          value={form.location}
-          onChangeText={(t) => setForm({ ...form, location: t })}
-        />
-      </View>
-
-      {/* SUBMIT */}
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleSubmit}
-        disabled={loading}
+      <KeyboardAwareScrollView
+        contentContainerStyle={{ padding: 20, paddingBottom: 50 }}
+        enableOnAndroid={true}
+        extraScrollHeight={20}
+        keyboardShouldPersistTaps="handled"
       >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Post Item</Text>
-        )}
-      </TouchableOpacity>
+        <Text style={styles.header}>Share Item</Text>
+        <Text style={styles.sub}>Help others find lost items</Text>
 
-    </ScrollView>
+        {/* IMAGE */}
+        <TouchableOpacity style={styles.imageCard} onPress={pickImage}>
+          {image ? (
+            <>
+              <Image source={{ uri: image }} style={styles.image} />
+            </>
+          ) : (
+            <View style={styles.imagePlaceholder}>
+              <Ionicons name="camera-outline" size={30} color="#777" />
+              <Text style={{ color: '#777', marginTop: 5 }}>Add Photo</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+
+        {/* TYPE */}
+        <View style={styles.toggleRow}>
+          <TouchableOpacity
+            style={[styles.toggle, form.type === 'lost' && styles.toggleActive]}
+            onPress={() => setForm({ ...form, type: 'lost' })}
+          >
+            <Text style={form.type === 'lost' ? styles.toggleTextActive : styles.toggleText}>
+              Lost
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.toggle, form.type === 'found' && styles.toggleActive]}
+            onPress={() => setForm({ ...form, type: 'found' })}
+          >
+            <Text style={form.type === 'found' ? styles.toggleTextActive : styles.toggleText}>
+              Found
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* INPUTS */}
+        <View style={styles.card}>
+          <TextInput
+            placeholder="Title *"
+            style={styles.input}
+            value={form.title}
+            onChangeText={(t) => setForm({ ...form, title: t })}
+            returnKeyType="next"
+            onSubmitEditing={() => descRef.current?.focus()}
+          />
+
+          <TextInput
+            ref={descRef}
+            placeholder="Description *"
+            style={[styles.input, styles.textArea]}
+            multiline
+            value={form.description}
+            onChangeText={(t) => setForm({ ...form, description: t })}
+            returnKeyType="next"
+            onSubmitEditing={() => categoryRef.current?.focus()}
+          />
+
+          <TextInput
+            ref={categoryRef}
+            placeholder="Category"
+            style={styles.input}
+            value={form.category}
+            onChangeText={(t) => setForm({ ...form, category: t })}
+            returnKeyType="next"
+            onSubmitEditing={() => locationRef.current?.focus()}
+          />
+
+          <TextInput
+            ref={locationRef}
+            placeholder="Location *"
+            style={styles.input}
+            value={form.location}
+            onChangeText={(t) => setForm({ ...form, location: t })}
+          />
+        </View>
+
+        {/* SUBMIT */}
+        <TouchableOpacity
+          style={styles.button}
+          onPress={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Post Item</Text>
+          )}
+        </TouchableOpacity>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }

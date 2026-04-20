@@ -7,16 +7,19 @@ import {
 } from '@react-navigation/drawer';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { StatusBar } from "expo-status-bar";
 
 function CustomDrawerContent(props: any) {
   const menuItems = [
     { label: 'Dashboard', route: 'index', icon: 'home' },
-    { label: 'Home', route: 'home', icon: 'grid' },
+    { label: 'items', route: 'feedScreen', icon: 'grid' },
     { label: 'Settings', route: 'settings', icon: 'settings' },
     { label: 'Share Item', route: 'shareItem', icon: 'add-circle' },
   ];
 
   return (
+    <>
+        <StatusBar style="light" backgroundColor="#6C5CE7" />
     <DrawerContentScrollView {...props} style={styles.drawer}>
       {/* Header */}
       <View style={styles.header}>
@@ -37,11 +40,14 @@ function CustomDrawerContent(props: any) {
         />
       ))}
     </DrawerContentScrollView>
+    </>
   );
 }
 
 export default function DrawerLayout() {
   return (
+    
+
     <GestureHandlerRootView style={styles.container}>
       <Drawer
         drawerContent={(props) => <CustomDrawerContent {...props} />}
@@ -62,6 +68,7 @@ export default function DrawerLayout() {
       </Drawer>
     </GestureHandlerRootView>
   );
+
 }
 
 const styles = StyleSheet.create({
