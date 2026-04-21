@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   },
   headerSection: {
     alignItems: 'center',
-    marginTop: 80,
+    marginTop: 10,
     marginBottom: 40,
   },
   logoContainer: {
@@ -124,6 +124,7 @@ const styles = StyleSheet.create({
   },
   featuresSection: {
     paddingHorizontal: 25,
+    marginTop: 20,
     marginBottom: 40,
   },
   featureCard: {

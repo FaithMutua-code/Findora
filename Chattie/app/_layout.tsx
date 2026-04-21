@@ -8,12 +8,15 @@ function RootLayoutNav() {
   return (
     <>
      <StatusBar style="light" backgroundColor="#6C5CE7" />
-    <Stack>
+    <Stack screenOptions={{headerShown:false}}>
       {authData?.token == null ? (
         
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)"  />
       ) : (
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+  <>
+        <Stack.Screen name="(tabs)"  />
+         <Stack.Screen name="chat/[userId]"  />
+  </>
       )}
     </Stack>
     </>

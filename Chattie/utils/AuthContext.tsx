@@ -1,7 +1,14 @@
 import { createContext, useState } from 'react'
 
+interface AuthUser {
+  id: string
+  name: string
+  email: string
+}
+
 interface AuthData {
   token?: string | null
+  user?: AuthUser | null
 }
 
 interface AuthContextType {

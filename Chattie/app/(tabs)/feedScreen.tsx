@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { AuthContext } from '../../utils/AuthContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 type User = {
   id: number;
   name: string;
@@ -41,6 +42,7 @@ const getApiBaseUrl = () => {
 };
 
 export default function FeedScreen() {
+  const router = useRouter();
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -247,7 +249,13 @@ return(
 
       {/* ACTIONS */}
       <View style={styles.actions}>
-        <TouchableOpacity style={styles.actionBtn}>
+        <TouchableOpacity style={styles.actionBtn}
+        onPress={() => router.push({
+        pathname: '/chat/[userId]',
+        params: { userId: item.user_id }
+      })}
+        
+        >
           <Ionicons name="chatbubble-outline" size={22} color="#666" />
           <Text style={styles.actionText}>Message</Text>
         </TouchableOpacity>
