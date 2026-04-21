@@ -76,7 +76,7 @@ useEffect(() => {
     {
       title: 'Edit Profile',
       icon: 'person-outline',
-      onPress: () =>router.push('/profile'),
+      onPress: () =>router.push('/profile/profile'),
     },
     {
       title: 'Notifications',
