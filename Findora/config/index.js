@@ -1,0 +1,1 @@
+export const EXPO_CLIENT_ID='215682211378-ufjbe4rcs57i6kvgrgp5mjddubmnsru3.apps.googleusercontent.com'

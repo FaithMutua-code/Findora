@@ -2,23 +2,38 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { AuthContext, AuthProvider } from "../utils/AuthContext";
 import { useContext } from "react";
+import { View, ActivityIndicator } from "react-native";
+
 function RootLayoutNav() {
   const context = useContext(AuthContext);
   const authData = context?.authData;
+  const isLoading = context?.isLoading;
+
+  // Wait for AsyncStorage to load before deciding route
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: "#0f172a", justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#3b82f6" />
+      </View>
+    );
+  }
+
   return (
     <>
-     <StatusBar style="light" backgroundColor="#6C5CE7" />
-    <Stack screenOptions={{headerShown:false}}>
-      {authData?.token == null ? (
-        
-        <Stack.Screen name="(auth)"  />
-      ) : (
-  <>
-        <Stack.Screen name="(tabs)"  />
-         <Stack.Screen name="chat/[userId]"  />
-  </>
-      )}
-    </Stack>
+      <StatusBar style="light" backgroundColor="#6C5CE7" />
+      <Stack screenOptions={{ headerShown: false }}>
+        {authData?.token == null ? (
+          <>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="(auth)" />
+          </>
+        ) : (
+          <>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="chat/[userId]" />
+          </>
+        )}
+      </Stack>
     </>
   );
 }
@@ -26,7 +41,6 @@ function RootLayoutNav() {
 export default function RootLayout() {
   return (
     <AuthProvider>
-        
       <RootLayoutNav />
     </AuthProvider>
   );
