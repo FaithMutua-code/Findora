@@ -9,15 +9,17 @@ import {
   Alert,
   ActivityIndicator,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import LocationPicker from '@/components/LocationPicker';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
 import { AuthContext } from '../../utils/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const getApiBaseUrl = () => 'http://192.168.100.129:8000';
 
@@ -25,33 +27,31 @@ const CATEGORIES = [
   'Keys', 'Wallet', 'Phone', 'Bag',
   'Laptop', 'Earphones', 'Charger', 'Camera',
   'Clothing', 'Shoes', 'Watch', 'Jewelry',
-  'ID / Passport', 'Driver\'s License', 'Bank Card', 'Documents',
+  'ID / Passport', "Driver's License", 'Bank Card', 'Documents',
   'Pet', 'Toy', 'Books', 'Other',
 ];
 
 export default function ShareItemScreen() {
   const router = useRouter();
   const context = useContext(AuthContext);
-
   if (!context) throw new Error('Must be inside AuthProvider');
-
   const { authData } = context;
 
   const [loading, setLoading] = useState(false);
   const [image, setImage] = useState<string | null>(null);
-
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [form, setForm] = useState({
     title: '',
     description: '',
     category: '',
     location: '',
     type: 'lost',
-  latitude: null as number | null,
-  longitude: null as number | null,
+    date_lost_found: new Date(),
+    latitude: null as number | null,
+    longitude: null as number | null,
   });
 
   const descRef = useRef<TextInput | null>(null);
-  const locationRef = useRef<TextInput | null>(null);
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -59,10 +59,12 @@ export default function ShareItemScreen() {
       allowsEditing: true,
       quality: 0.8,
     });
+    if (!result.canceled) setImage(result.assets[0].uri);
+  };
 
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
-    }
+  const onDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(false);
+    if (selectedDate) setForm({ ...form, date_lost_found: selectedDate });
   };
 
   const handleSubmit = async () => {
@@ -70,14 +72,12 @@ export default function ShareItemScreen() {
       Alert.alert('Error', 'Fill all required fields');
       return;
     }
-
     if (!form.category) {
       Alert.alert('Error', 'Please select a category');
       return;
     }
 
     setLoading(true);
-
     try {
       const data = new FormData();
       data.append('title', form.title);
@@ -85,6 +85,14 @@ export default function ShareItemScreen() {
       data.append('category', form.category);
       data.append('location', form.location);
       data.append('type', form.type);
+
+      // ✅ Fix: send actual date formatted as YYYY-MM-DD
+      const dateStr = form.date_lost_found.toISOString().split('T')[0];
+      data.append('date_lost_found', dateStr);
+
+      // ✅ Fix: send coordinates if available
+      if (form.latitude !== null) data.append('latitude', String(form.latitude));
+      if (form.longitude !== null) data.append('longitude', String(form.longitude));
 
       if (image) {
         data.append('image', {
@@ -101,10 +109,28 @@ export default function ShareItemScreen() {
         },
       });
 
-      Alert.alert('Success', 'Item posted successfully');
-      router.navigate('/(tabs)/feedScreen');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to post item');
+      Alert.alert('Success', 'Item posted successfully', [
+        {
+          text: 'OK',
+          onPress: () => {
+            setForm({
+              title: '',
+              description: '',
+              category: '',
+              location: '',
+              type: 'lost',
+              date_lost_found: new Date(),
+              latitude: null,
+              longitude: null,
+            });
+            setImage(null);
+            router.navigate('/(tabs)/feedScreen');
+          },
+        },
+      ]);
+    } catch (error: any) {
+      console.error('Submit error:', error.response?.data ?? error.message);
+      Alert.alert('Error', error.response?.data?.message ?? 'Failed to post item');
     } finally {
       setLoading(false);
     }
@@ -112,12 +138,15 @@ export default function ShareItemScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f4f6f9' }}>
-      <KeyboardAwareScrollView
-        contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
-        enableOnAndroid={true}
-        extraScrollHeight={20}
-        keyboardShouldPersistTaps="handled"
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
+        <ScrollView
+          contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
         <Text style={styles.header}>Share Item</Text>
         <Text style={styles.sub}>Help others find lost items</Text>
 
@@ -143,7 +172,6 @@ export default function ShareItemScreen() {
               Lost
             </Text>
           </TouchableOpacity>
-
           <TouchableOpacity
             style={[styles.toggle, form.type === 'found' && styles.toggleActive]}
             onPress={() => setForm({ ...form, type: 'found' })}
@@ -174,7 +202,36 @@ export default function ShareItemScreen() {
             onChangeText={(t) => setForm({ ...form, description: t })}
           />
 
-          {/* CATEGORY CHIPS */}
+          {/* DATE */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>
+              {form.type === 'lost' ? 'Date Lost *' : 'Date Found *'}
+            </Text>
+            <TouchableOpacity
+              style={styles.dateButton}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Ionicons name="calendar" size={20} color="#666" />
+              <Text style={styles.dateText}>
+                {form.date_lost_found.toLocaleDateString(undefined, {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              </Text>
+            </TouchableOpacity>
+            {showDatePicker && (
+              <DateTimePicker
+                value={form.date_lost_found}
+                mode="date"
+                display="default"
+                onChange={onDateChange}
+                maximumDate={new Date()}
+              />
+            )}
+          </View>
+
+          {/* CATEGORY */}
           <Text style={styles.categoryLabel}>Category *</Text>
           <ScrollView
             horizontal
@@ -185,10 +242,7 @@ export default function ShareItemScreen() {
             {CATEGORIES.map((cat) => (
               <TouchableOpacity
                 key={cat}
-                style={[
-                  styles.chip,
-                  form.category === cat && styles.chipActive,
-                ]}
+                style={[styles.chip, form.category === cat && styles.chipActive]}
                 onPress={() => setForm({ ...form, category: cat })}
               >
                 <Text style={form.category === cat ? styles.chipTextActive : styles.chipText}>
@@ -198,24 +252,13 @@ export default function ShareItemScreen() {
             ))}
           </ScrollView>
 
-          <TextInput
-            ref={locationRef}
-            placeholder="Location *"
-            style={[styles.input, { marginTop: 12 }]}
-            value={form.location}
-            onChangeText={(t) => setForm({ ...form, location: t })}
-          />
+          {/* LOCATION */}
           <LocationPicker
-  value={form.location}
-  onChange={({ address, latitude, longitude }) => {
-    setForm({ 
-      ...form, 
-      location: address,
-      latitude, 
-      longitude,
-    });
-  }}
-/>
+            value={form.location}
+            onChange={({ address, latitude, longitude }) => {
+              setForm({ ...form, location: address, latitude, longitude });
+            }}
+          />
         </View>
 
         {/* SUBMIT */}
@@ -224,125 +267,55 @@ export default function ShareItemScreen() {
           onPress={handleSubmit}
           disabled={loading}
         >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Post Item</Text>
-          )}
+          {loading
+            ? <ActivityIndicator color="#fff" />
+            : <Text style={styles.buttonText}>Post Item</Text>
+          }
         </TouchableOpacity>
-      </KeyboardAwareScrollView>
+      </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#111',
-  },
-  sub: {
-    color: '#666',
-    marginBottom: 15,
-  },
+  header: { fontSize: 28, fontWeight: '700', color: '#111' },
+  sub: { color: '#666', marginBottom: 15 },
   imageCard: {
-    height: 200,
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 15,
-    overflow: 'hidden',
+    height: 200, backgroundColor: '#fff', borderRadius: 16,
+    justifyContent: 'center', alignItems: 'center',
+    marginBottom: 15, overflow: 'hidden',
   },
-  image: {
-    width: '100%',
-    height: '100%',
-  },
-  imagePlaceholder: {
-    alignItems: 'center',
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    marginBottom: 15,
-  },
+  image: { width: '100%', height: '100%' },
+  imagePlaceholder: { alignItems: 'center' },
+  toggleRow: { flexDirection: 'row', marginBottom: 15 },
   toggle: {
-    flex: 1,
-    padding: 12,
-    backgroundColor: '#fff',
-    marginHorizontal: 5,
-    borderRadius: 10,
-    alignItems: 'center',
+    flex: 1, padding: 12, backgroundColor: '#fff',
+    marginHorizontal: 5, borderRadius: 10, alignItems: 'center',
   },
-  toggleActive: {
-    backgroundColor: '#6C5CE7',
+  toggleActive: { backgroundColor: '#6C5CE7' },
+  toggleText: { color: '#333', fontWeight: '600' },
+  toggleTextActive: { color: '#fff', fontWeight: '600' },
+  card: { backgroundColor: '#fff', padding: 15, borderRadius: 16, marginBottom: 20 },
+  input: { backgroundColor: '#f5f5f5', padding: 12, borderRadius: 10, marginBottom: 12 },
+  textArea: { height: 100, textAlignVertical: 'top' },
+  inputGroup: { marginBottom: 20 },
+  label: { fontSize: 16, fontWeight: '600', color: '#333', marginBottom: 8 },
+  dateButton: {
+    backgroundColor: '#fff', borderWidth: 1, borderColor: '#ddd',
+    borderRadius: 8, padding: 12, flexDirection: 'row', alignItems: 'center',
   },
-  toggleText: {
-    color: '#333',
-    fontWeight: '600',
-  },
-  toggleTextActive: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-  card: {
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 16,
-    marginBottom: 20,
-  },
-  input: {
-    backgroundColor: '#f5f5f5',
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 12,
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: 'top',
-  },
-  categoryLabel: {
-    fontSize: 13,
-    color: '#888',
-    marginBottom: 8,
-    fontWeight: '500',
-  },
-  chipsScroll: {
-    marginBottom: 4,
-  },
-  chipsContainer: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingVertical: 4,
-  },
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 20,
-  },
-  chipActive: {
-    backgroundColor: '#6C5CE7',
-  },
-  chipText: {
-    color: '#444',
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  chipTextActive: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '600',
-  },
+  dateText: { fontSize: 16, color: '#333', marginLeft: 10 },
+  categoryLabel: { fontSize: 13, color: '#888', marginBottom: 8, fontWeight: '500' },
+  chipsScroll: { marginBottom: 4 },
+  chipsContainer: { flexDirection: 'row', gap: 8, paddingVertical: 4 },
+  chip: { paddingHorizontal: 14, paddingVertical: 8, backgroundColor: '#f0f0f0', borderRadius: 20 },
+  chipActive: { backgroundColor: '#6C5CE7' },
+  chipText: { color: '#444', fontSize: 13, fontWeight: '500' },
+  chipTextActive: { color: '#fff', fontSize: 13, fontWeight: '600' },
   button: {
-    backgroundColor: '#6C5CE7',
-    padding: 15,
-    marginBottom: 50,
-    borderRadius: 12,
-    alignItems: 'center',
+    backgroundColor: '#6C5CE7', padding: 15,
+    marginBottom: 50, borderRadius: 12, alignItems: 'center',
   },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 16,
-  },
+  buttonText: { color: '#fff', fontWeight: '700', fontSize: 16 },
 });

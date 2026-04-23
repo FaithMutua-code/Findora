@@ -33,6 +33,7 @@ type Item = {
   description: string;
   category: string;
   location: string;
+  date_lost_found:string;
   type: 'lost' | 'found';
   image?: string;
   user?: User;
@@ -246,6 +247,9 @@ return(
         {item.category && (
           <Text style={styles.category}>🏷️ {item.category}</Text>
         )}
+         <Text style={styles.location}>
+  🕐 {item.type === 'lost' ? 'Lost on' : 'Found on'}: {item.date_lost_found}
+</Text>
       </View>
 
       {/* ACTIONS */}

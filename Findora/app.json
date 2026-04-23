@@ -2,7 +2,7 @@
   "expo": {
     "name": "Findora",
     "slug": "findora",
-     "owner": "faithmutua",
+    "owner": "faithmutua",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon1.png",
@@ -25,12 +25,17 @@
       "intentFilters": [
         {
           "action": "VIEW",
-          "category": ["BROWSABLE", "DEFAULT"],
-          "data": [{ "scheme": "findora" }]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ],
+          "data": [
+            {
+              "scheme": "findora"
+            }
+          ]
         }
       ]
-
-      
     },
     "web": {
       "output": "static",
@@ -50,7 +55,8 @@
           }
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,

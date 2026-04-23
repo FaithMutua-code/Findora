@@ -74,6 +74,7 @@ class ItemController extends Controller
             'description' => 'required|string',
             'category'    => 'nullable|string|max:255',
             'location'    => 'required|string|max:255',
+            'date_lost_found'    => 'required|string|max:255',
             'latitude'    => 'nullable|numeric|between:-90,90',
             'longitude'   => 'nullable|numeric|between:-180,180',
             'type'        => 'required|in:lost,found',

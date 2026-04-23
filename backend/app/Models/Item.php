@@ -11,6 +11,7 @@ class Item extends Model
         'title',
         'description',
         'category',
+        'date_lost_found',
         'location',
         'latitude',
         'longitude',
