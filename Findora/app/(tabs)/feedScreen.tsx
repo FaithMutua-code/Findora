@@ -19,6 +19,9 @@ import axios from 'axios';
 import { AuthContext } from '../../utils/AuthContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+
+import * as Linking from 'expo-linking';
+
 type User = {
   id: number;
   name: string;
@@ -198,16 +201,14 @@ export default function FeedScreen() {
 
 
   const renderItem = ({ item }: { item: Item }) => {
-      const handleShare = async () => {
-  try {
-    await Share.share({
-      title: item.title,
-      message: `🔍 ${item.type === 'lost' ? 'Lost' : 'Found'}: ${item.title}\n📍 ${item.location}\n\n${item.description}`,
-    });
-  } catch (error) {
-    Alert.alert('Error', 'Could not share this item');
-  }
-};
+  const handleShare = async () => {
+  const deepLink = Linking.createURL(`items/${item.id}`);
+  
+  await Share.share({
+    message: `Check out ${item.title} on Findora!\n${deepLink}`,
+    title: item.title,
+  });
+}
 return(
     <View style={styles.card}>
       {/* USER INFO */}

@@ -9,7 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  StatusBar,
+
   AppState,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -19,7 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { createEcho } from '../../utils/echo';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
-
+import { StatusBar } from "expo-status-bar";
 const BASE_URL = 'http://192.168.100.129:8000';
 
 // Configure how notifications appear when app is foregrounded
@@ -231,6 +231,7 @@ export default function ChatScreen() {
     const isVoice = item.type === 'voice';
 
     return (
+     
       <View style={[styles.messageRow, isMe ? styles.myMessageRow : styles.theirMessageRow]}>
         {isVoice ? renderVoiceMessage(item, isMe) : (
           <View style={[styles.messageBubble, isMe ? styles.myMessage : styles.theirMessage]}>
@@ -267,9 +268,10 @@ export default function ChatScreen() {
   }
 
   return (
+     <>
+       <StatusBar style="light" backgroundColor="#6C5CE7" />
+     
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn}>
@@ -337,9 +339,6 @@ export default function ChatScreen() {
               blurOnSubmit={false}
             />
           </View>
-          <TouchableOpacity style={styles.emojiBtn}>
-            <Ionicons name="happy-outline" size={20} color="#aaa" />
-          </TouchableOpacity>
           {text.trim() ? (
             <TouchableOpacity
               onPress={sendMessage}
@@ -359,6 +358,7 @@ export default function ChatScreen() {
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
+    </>
   );
 }
 
@@ -445,7 +445,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 10, paddingVertical: 8,
     backgroundColor: '#fff', borderTopWidth: 1,
-    borderTopColor: '#f0f0f0', gap: 6,
+    borderTopColor: '#f0f0f0', gap: 6,marginBottom:2,
   },
   attachBtn: {
     width: 34, height: 34, borderRadius: 17,
@@ -454,9 +454,9 @@ const styles = StyleSheet.create({
   inputWrap: {
     flex: 1, backgroundColor: PURPLE_LIGHT, borderRadius: 20,
     borderWidth: 1, borderColor: PURPLE_BORDER,
-    maxHeight: 100, paddingHorizontal: 14, paddingVertical: 7,
+    height: 60, paddingHorizontal: 14, paddingVertical: 7,
   },
-  textInput: { fontSize: 13.5, color: '#333', maxHeight: 86, padding: 0 },
+  textInput: { fontSize: 13.5, color: '#333', maxHeight: 90, padding: 0 },
   emojiBtn: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center' },
   sendBtn: {
     width: 36, height: 36, borderRadius: 18,
