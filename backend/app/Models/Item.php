@@ -12,6 +12,8 @@ class Item extends Model
         'description',
         'category',
         'location',
+        'latitude',
+        'longitude',
         'type',
         'image'
     ];

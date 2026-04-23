@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
-
+import LocationPicker from '@/components/LocationPicker';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
@@ -46,6 +46,8 @@ export default function ShareItemScreen() {
     category: '',
     location: '',
     type: 'lost',
+  latitude: null as number | null,
+  longitude: null as number | null,
   });
 
   const descRef = useRef<TextInput | null>(null);
@@ -203,6 +205,17 @@ export default function ShareItemScreen() {
             value={form.location}
             onChangeText={(t) => setForm({ ...form, location: t })}
           />
+          <LocationPicker
+  value={form.location}
+  onChange={({ address, latitude, longitude }) => {
+    setForm({ 
+      ...form, 
+      location: address,
+      latitude, 
+      longitude,
+    });
+  }}
+/>
         </View>
 
         {/* SUBMIT */}
