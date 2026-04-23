@@ -250,10 +250,10 @@ return(
       {/* ACTIONS */}
       <View style={styles.actions}>
         <TouchableOpacity style={styles.actionBtn}
-        onPress={() => router.push({
-        pathname: '/chat/[userId]',
-        params: { userId: item.user_id }
-      })}
+          onPress={() => router.push({
+          pathname: '/chat/[userId]',
+          params: { userId: item.user_id, userName: item.user?.name ?? 'User' }
+        })}
         
         >
           <Ionicons name="chatbubble-outline" size={22} color="#666" />

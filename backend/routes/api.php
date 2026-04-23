@@ -1,5 +1,5 @@
 <?php
-
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Auth\ApiLoginController;
@@ -19,6 +19,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/user', [UserController::class, 'update']);
     Route::post('/items', [ItemController::class, 'store']);
       Route::get('/items', [ItemController::class, 'index']);
-         Route::post('/messages', [MessageController::class, 'send']);
     Route::get('/messages/{userId}', [MessageController::class, 'fetch']);
+    Route::post('/messages', [MessageController::class, 'send']);
+    Route::post('/fcm-token',[UserController::class, 'updateFcmToken']);
 });
+
+    Route::post('/broadcasting/auth', function () {
+        return Broadcast::auth(request());
+    });

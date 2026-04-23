@@ -9,36 +9,35 @@ use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Facades\Log;
 class GoogleController extends Controller
 {
-  public function redirect()
+public function callback()
 {
-    $url = Socialite::driver('google')
-        ->stateless()
-        ->redirect()
-        ->getTargetUrl();
+    try {
+        /** @var \Laravel\Socialite\Two\GoogleProvider $driver */
+        $driver = Socialite::driver('google');
+        $googleUser = $driver->stateless()->user();
 
-    // Temporarily log it to see exact URI
-    Log::info('Google redirect URL: ' . $url);
+        $user = User::updateOrCreate(
+            ['email' => $googleUser->getEmail()],
+            [
+                'name' => $googleUser->getName(),
+                'google_id' => $googleUser->getId(),
+                'password' => null, // ← explicitly set null
+                'email_verified_at' => now(),
+            ]
+        );
 
-    return response()->json(['url' => $url]);
-}
+        $token = $user->createToken('auth_token')->plainTextToken;
 
-    public function callback()
-{
-    $googleUser = Socialite::driver('google')->stateless()->user();
+        $appUrl = 'findora://auth/callback?' . http_build_query([
+            'token' => $token,
+            'user' => json_encode($user)
+        ]);
 
-    $user = User::updateOrCreate(
-        ['email' => $googleUser->getEmail()],
-        [
-            'name' => $googleUser->getName(),
-            'google_id' => $googleUser->getId(),
-        ]
-    );
+        return redirect($appUrl);
 
-    $token = $user->createToken('auth_token')->plainTextToken;
-
-    return response()->json([
-        'user' => $user,
-        'token' => $token,
-    ]);
+    } catch (\Exception $e) {
+        Log::error('Google auth failed: ' . $e->getMessage());
+        return redirect('findora://auth/callback?error=failed');
+    }
 }
 }
