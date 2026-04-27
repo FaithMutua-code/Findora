@@ -33,6 +33,7 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
           const iconMap: Record<string, { active: any; inactive: any }> = {
             index: { active: 'home', inactive: 'home-outline' },
             feedScreen: { active: 'grid', inactive: 'grid-outline' },
+            profile: { active: 'person', inactive: 'person-outline' },
             settings: { active: 'settings', inactive: 'settings-outline' },
           };
 
@@ -75,8 +76,9 @@ export default function TabLayout() {
         <Tabs.Screen name="index" options={{ title: 'Home' }} />
         <Tabs.Screen name="feedScreen" options={{ title: 'Items' }} />
         <Tabs.Screen name="shareItem" options={{ title: 'Share' }} />
+         <Tabs.Screen name="profile" options={{ title:'Profile' }} />
         <Tabs.Screen name="settings" options={{ title: 'Settings' }} />
-        <Tabs.Screen name="profile" options={{ href: null }} />
+       
       </Tabs>
     </SafeAreaView>
   );

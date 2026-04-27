@@ -21,7 +21,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import {API_URL } from '@/config';
 import * as Linking from 'expo-linking';
-
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 type User = {
   id: number;
   name: string;
@@ -241,14 +241,18 @@ return(
         <Text style={styles.desc} numberOfLines={3}>
           {item.description}
         </Text>
-        <Text style={styles.location}>📍 {item.location}</Text>
+        <Text style={styles.location}><Ionicons name="location-outline" size={12} color="#aaa" />
+                {item.location}</Text>
         {item.category && (
-          <Text style={styles.category}>🏷️ {item.category}</Text>
+          <Text style={styles.category}><MaterialIcons name="category" size={12} color="black" /> {item.category}</Text>
         )}
          <Text style={styles.location}>
   🕐 {item.type === 'lost' ? 'Lost on' : 'Found on'}: {item.date_lost_found}
 </Text>
-      </View>
+      </View>    
+ 
+ 
+
 
       {/* ACTIONS */}
       <View style={styles.actions}>
