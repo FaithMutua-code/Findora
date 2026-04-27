@@ -20,8 +20,7 @@ import { AuthContext } from '../../utils/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
-
-const getApiBaseUrl = () => 'http://192.168.100.129:8000';
+import {API_URL } from '@/config';
 
 const CATEGORIES = [
   'Keys', 'Wallet', 'Phone', 'Bag',
@@ -102,7 +101,7 @@ export default function ShareItemScreen() {
         } as any);
       }
 
-      await axios.post(`${getApiBaseUrl()}/api/items`, data, {
+      await axios.post(`${API_URL}/api/items`, data, {
         headers: {
           Authorization: `Bearer ${authData?.token}`,
           'Content-Type': 'multipart/form-data',

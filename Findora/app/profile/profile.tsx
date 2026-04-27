@@ -12,10 +12,7 @@ import {
 import { useRouter } from 'expo-router';
 import axios from 'axios';
 import { AuthContext } from '@/utils/AuthContext';
-
-const getApiBaseUrl = () => {
-  return 'http://192.168.100.129:8000';
-};
+import {API_URL } from '@/config';
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -39,7 +36,7 @@ export default function EditProfileScreen() {
   // 🚀 Fetch current user
   const fetchUser = async () => {
     try {
-      const res = await axios.get(`${getApiBaseUrl()}/api/user`, {
+      const res = await axios.get(`${API_URL}/api/user`, {
         headers: {
           Authorization: `Bearer ${authData?.token}`,
         },
@@ -85,7 +82,7 @@ export default function EditProfileScreen() {
       setSaving(true);
 
       await axios.put(
-        `${getApiBaseUrl()}/api/user`,
+        `${API_URL}/api/user`,
         form,
         {
           headers: {

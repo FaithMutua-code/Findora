@@ -14,12 +14,8 @@ import {
 import { useRouter } from 'expo-router';
 import { AuthContext } from '../../utils/AuthContext';
 import axios from 'axios';
+import {API_URL } from '@/config';
 
-const getApiBaseUrl = () => {
-
-  return 'http://192.168.100.129:8000';
- 
-};
 export default function RegisterScreen() {
   const [formData, setFormData] = useState({
     email: '',
@@ -85,7 +81,7 @@ const handleRegister = async () => {
   setLoading(true);
   try {
     const response = await axios.post(
-      `${getApiBaseUrl()}/api/register`,
+      `${API_URL}/api/register`,
       {
         name: formData.username,
         email: formData.email,

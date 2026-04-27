@@ -2,7 +2,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState,useContext } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
 import axios from 'axios';
-
+import {API_URL } from '@/config';
 import { AuthContext } from '@/utils/AuthContext';
 
 export default function ItemScreen() {
@@ -12,7 +12,7 @@ export default function ItemScreen() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get(`http://192.168.100.129:8000/api/items/${id}`, {
+    axios.get(`${API_URL}/api/items/${id}`, {
       headers: { Authorization: `Bearer ${authData?.token}` },
     })
     .then(res => setItem(res.data))

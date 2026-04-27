@@ -11,12 +11,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import axios from 'axios';
 import { AuthContext } from '@/utils/AuthContext';
+import {API_URL } from '@/config';
 
-const getApiBaseUrl = () => {
-
-  return 'http://192.168.100.129:8000';
- 
-};
 export default function SettingsScreen() {
   const router = useRouter();
   const context = useContext(AuthContext);
@@ -32,7 +28,7 @@ export default function SettingsScreen() {
   const handleLogout = async () => {
     try {
       await axios.post(
-        `${getApiBaseUrl()}/api/logout`,
+        `${API_URL}/api/logout`,
         {},
         {
           headers: {
@@ -50,7 +46,7 @@ export default function SettingsScreen() {
   const fetchUser = async () => {
   try {
     const response = await axios.get(
-      `${getApiBaseUrl()}/api/user`,
+      `${API_URL}/api/user`,
       {
         headers: {
           Authorization: `Bearer ${authData?.token}`,

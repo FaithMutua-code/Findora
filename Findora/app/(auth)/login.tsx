@@ -14,13 +14,11 @@ import { useRouter } from 'expo-router';
 import { AuthContext } from '../../utils/AuthContext';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
-import { EXPO_CLIENT_ID } from '@/config';
+import { EXPO_CLIENT_ID,API_URL } from '@/config';
 
 WebBrowser.maybeCompleteAuthSession();
 
-const getApiBaseUrl = () => {
-  return 'http://192.168.100.129:8000';
-};
+
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -53,7 +51,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const response = await axios.post(`${getApiBaseUrl()}/api/login`, {
+      const response = await axios.post(`${API_URL}/api/login`, {
         email,
         password,
       });
@@ -84,7 +82,7 @@ export default function Login() {
   const sendTokenToBackend = useCallback(async (accessToken: string | undefined) => {
     try {
       const res = await axios.post(
-        'http://192.168.100.129:8000/api/auth/google/mobile',
+        `${API_URL}/api/auth/google/mobile`,
         {
           access_token: accessToken,
         }

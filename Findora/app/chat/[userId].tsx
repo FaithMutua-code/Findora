@@ -20,7 +20,7 @@ import { createEcho } from '../../utils/echo';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
 import { StatusBar } from "expo-status-bar";
-const BASE_URL = 'http://192.168.100.129:8000';
+import {API_URL } from '@/config';
 
 // Configure how notifications appear when app is foregrounded
 Notifications.setNotificationHandler({
@@ -54,7 +54,7 @@ export default function ChatScreen() {
 
   // ─── Axios instance ───────────────────────────────────────────────
   const api = axios.create({
-    baseURL: BASE_URL,
+    baseURL: API_URL,
     headers: { Authorization: `Bearer ${token}` },
   });
 

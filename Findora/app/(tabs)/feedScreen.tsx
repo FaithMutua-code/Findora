@@ -19,7 +19,7 @@ import axios from 'axios';
 import { AuthContext } from '../../utils/AuthContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-
+import {API_URL } from '@/config';
 import * as Linking from 'expo-linking';
 
 type User = {
@@ -41,9 +41,7 @@ type Item = {
   created_at?: string;
 };
 
-const getApiBaseUrl = () => {
-  return 'http://192.168.100.129:8000';
-};
+
 
 export default function FeedScreen() {
   const router = useRouter();
@@ -93,7 +91,7 @@ export default function FeedScreen() {
         params.type = filter;
       }
 
-      const response = await axios.get(`${getApiBaseUrl()}/api/items`, {
+      const response = await axios.get(`${API_URL}/api/items`, {
         headers: {
           Authorization: `Bearer ${authData?.token}`,
         },
