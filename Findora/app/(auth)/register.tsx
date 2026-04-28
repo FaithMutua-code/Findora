@@ -15,8 +15,9 @@ import { useRouter } from 'expo-router';
 import { AuthContext } from '../../utils/AuthContext';
 import axios from 'axios';
 import {API_URL } from '@/config';
-
+import { Ionicons } from '@expo/vector-icons';
 export default function RegisterScreen() {
+  
   const [formData, setFormData] = useState({
     email: '',
     username: '',
@@ -25,7 +26,8 @@ export default function RegisterScreen() {
     password_confirmation: '',
   });
   const [loading, setLoading] = useState(false);
-  
+  const[showPassword, setShowPassword] =useState(false)
+const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
 const context = useContext(AuthContext);
   if (!context) {
@@ -156,8 +158,7 @@ const handleRegister = async () => {
               autoComplete="email"
               importantForAutofill="yes"
             />
-
-            <TextInput
+               <TextInput
               style={styles.input}
               placeholder="Username"
               value={formData.username}
@@ -166,6 +167,7 @@ const handleRegister = async () => {
               editable={!loading}
               autoComplete="username"
             />
+
 
             <TextInput
               style={styles.input}
@@ -176,25 +178,33 @@ const handleRegister = async () => {
               editable={!loading}
             />
 
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              value={formData.password}
-              onChangeText={(text) => setFormData({...formData, password: text})}
-              secureTextEntry
-              editable={!loading}
-              autoComplete="password-new"
-            />
+           <View style={styles.inputWrapper}>
+  <TextInput
+    style={styles.inputFlex}
+    placeholder="Password"
+    value={formData.password}
+    onChangeText={(text) => setFormData({...formData, password: text})}
+    secureTextEntry={!showPassword}
+    editable={!loading}
+  />
+  <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
+    <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color="#999" />
+  </TouchableOpacity>
+</View>
 
-            <TextInput
-              style={styles.input}
-              placeholder="Confirm Password"
-              value={formData.password_confirmation}
-              onChangeText={(text) => setFormData({...formData, password_confirmation: text})}
-              secureTextEntry
-              editable={!loading}
-              autoComplete="password-new"
-            />
+<View style={styles.inputWrapper}>
+  <TextInput
+    style={styles.inputFlex}
+    placeholder="Confirm Password"
+    value={formData.password_confirmation}
+    onChangeText={(text) => setFormData({...formData, password_confirmation: text})}
+    secureTextEntry={!showConfirmPassword}
+    editable={!loading}
+  />
+  <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeBtn}>
+    <Ionicons name={showConfirmPassword ? 'eye-off' : 'eye'} size={20} color="#999" />
+  </TouchableOpacity>
+</View>
 
             <TouchableOpacity
               style={[styles.button, loading && styles.buttonDisabled]}
@@ -276,7 +286,7 @@ const styles = StyleSheet.create({
   },
   button: {
     height: 50,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#6C5CE7',
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
@@ -285,6 +295,24 @@ const styles = StyleSheet.create({
   buttonDisabled: {
     opacity: 0.7,
   },
+  inputWrapper: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  borderWidth: 1,
+  borderColor: '#ddd',
+  borderRadius: 8,
+  marginBottom: 15,
+  backgroundColor: '#fafafa',
+  paddingHorizontal: 15,
+},
+inputFlex: {
+  flex: 1,
+  height: 50,
+  fontSize: 16,
+},
+eyeBtn: {
+  padding: 4,
+},
   buttonText: {
     color: '#fff',
     fontSize: 18,
@@ -296,11 +324,11 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   loginText: {
-    color: '#666',
+    color: '#6C5CE7',
     fontSize: 16,
   },
   loginLink: {
-    color: '#007AFF',
+    color: '#6C5CE7',
     fontSize: 16,
     fontWeight: '600',
   },

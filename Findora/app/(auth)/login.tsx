@@ -15,7 +15,7 @@ import { AuthContext } from '../../utils/AuthContext';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import { EXPO_CLIENT_ID,API_URL } from '@/config';
-
+import { Ionicons } from '@expo/vector-icons';
 WebBrowser.maybeCompleteAuthSession();
 
 
@@ -27,7 +27,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const context = useContext(AuthContext);
-
+     const[showPassword, setShowPassword] =useState(false)
   if (!context) {
     throw new Error('LoginScreen must be used within AuthProvider');
   }
@@ -131,14 +131,19 @@ export default function Login() {
             editable={!loading}
           />
 
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            editable={!loading}
-          />
+         <View style={styles.inputWrapper}>
+  <TextInput
+    style={styles.inputFlex}
+    placeholder="Password"
+    value={password}
+    onChangeText={setPassword}
+    secureTextEntry={!showPassword}
+    editable={!loading}
+  />
+  <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
+    <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color="#999" />
+  </TouchableOpacity>
+</View>
 
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
@@ -253,4 +258,22 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
   },
+  inputWrapper: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  borderWidth: 1,
+  borderColor: '#ddd',
+  borderRadius: 8,
+  marginBottom: 15,
+  backgroundColor: '#fafafa',
+  paddingHorizontal: 15,
+},
+inputFlex: {
+  flex: 1,
+  height: 50,
+  fontSize: 16,
+},
+eyeBtn: {
+  padding: 4,
+},
 });
