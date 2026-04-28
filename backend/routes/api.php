@@ -20,6 +20,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/items', [ItemController::class, 'store']);
       Route::get('/items', [ItemController::class, 'index']);
       Route::get('/items/{id}', [ItemController::class, 'show']);
+      Route::get('/matches/{id}', [ItemController::class, 'findMatches']);
     Route::get('/messages/{userId}', [MessageController::class, 'fetch']);
     Route::post('/messages', [MessageController::class, 'send']);
     Route::post('/fcm-token',[UserController::class, 'updateFcmToken']);

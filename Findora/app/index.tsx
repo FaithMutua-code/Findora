@@ -11,12 +11,6 @@ export default function Index() {
         </Text>
 
         <View style={styles.buttons}>
-          <Link href="/(tabs)" asChild>
-            <TouchableOpacity style={styles.primaryButton}>
-              <Text style={styles.primaryText}>Enter App</Text>
-            </TouchableOpacity>
-          </Link>
-
           <Link href="/(auth)/login" asChild>
             <TouchableOpacity style={styles.secondaryButton}>
               <Text style={styles.secondaryText}>Login</Text>

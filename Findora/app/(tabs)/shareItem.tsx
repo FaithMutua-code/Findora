@@ -101,31 +101,54 @@ export default function ShareItemScreen() {
         } as any);
       }
 
-      await axios.post(`${API_URL}/api/items`, data, {
-        headers: {
-          Authorization: `Bearer ${authData?.token}`,
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+    const response = await axios.post(`${API_URL}/api/items`, data, {
+  headers: {
+    Authorization: `Bearer ${authData?.token}`,
+    'Content-Type': 'multipart/form-data',
+  },
+});
 
-      Alert.alert('Success', 'Item posted successfully', [
-        {
-          text: 'OK',
-          onPress: () => {
-            setForm({
-              title: '',
-              description: '',
-              category: '',
-              location: '',
-              type: 'lost',
-              date_lost_found: new Date(),
-              latitude: null,
-              longitude: null,
-            });
-            setImage(null);
-            router.navigate('/(tabs)/feedScreen');
-          },
-        },
+const newItem = response.data.item;
+
+// 🔍 Check matches
+const matchResponse = await axios.get(
+  `${API_URL}/api/matches/${newItem.id}`,
+  {
+    headers: {
+      Authorization: `Bearer ${authData?.token}`,
+    },
+  }
+);
+
+const matches = matchResponse.data;
+
+Alert.alert('Success', 'Item posted successfully', [
+  {
+    text: 'OK',
+    onPress: () => {
+      setForm({
+        title: '',
+        description: '',
+        category: '',
+        location: '',
+        type: 'lost',
+        date_lost_found: new Date(),
+        latitude: null,
+        longitude: null,
+      });
+      setImage(null);
+
+      if (matches.length > 0) {
+       router.push({
+  pathname: "/match/matchScreen",
+  params: { id: newItem.id },
+});
+      } else {
+        router.navigate('/(tabs)/feedScreen');
+      }
+    },
+  },
+
       ]);
     } catch (error: any) {
       console.error('Submit error:', error.response?.data ?? error.message);

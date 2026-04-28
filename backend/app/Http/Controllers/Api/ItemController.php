@@ -112,4 +112,50 @@ class ItemController extends Controller
             'item'   => $item,
         ]);
     }
+  
+
+public function findMatches($id)
+{
+    $item = Item::findOrFail($id);
+
+    // Opposite type (lost vs found)
+    $oppositeType = $item->type === 'lost' ? 'found' : 'lost';
+
+    $candidates = Item::where('type', $oppositeType)->get();
+
+    $matches = [];
+
+    foreach ($candidates as $candidate) {
+        $score = 0;
+
+        // 1. Description Match (simple keyword match)
+        similar_text(
+            strtolower($item->description),
+            strtolower($candidate->description),
+            $percent
+        );
+        $score += $percent * 0.5; // 50%
+
+        // 2. Location Match
+        if (strtolower($item->location) === strtolower($candidate->location)) {
+            $score += 30; // 30%
+        }
+
+        // 3. Time Match (within 2 days)
+        $timeDiff = abs(strtotime($item->created_at) - strtotime($candidate->created_at));
+        if ($timeDiff <= 172800) { // 48 hours
+            $score += 20; // 20%
+        }
+
+        // Only keep strong matches
+        if ($score >= 70) {
+            $matches[] = [
+                'item' => $candidate,
+                'score' => round($score)
+            ];
+        }
+    }
+
+    return response()->json($matches);
+}
 }

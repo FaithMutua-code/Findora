@@ -7,18 +7,18 @@ import {
   StyleSheet,
   ActivityIndicator,
   TextInput,
- 
 } from 'react-native';
-import MapView, { Marker,  LongPressEvent, Region } from 'react-native-maps';
+import MapView, { Marker, Region } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from "expo-status-bar";
+
 interface LocationResult {
   address: string;
   latitude: number;
   longitude: number;
 }
-import { StatusBar } from "expo-status-bar";
 
 interface Props {
   value: string;
@@ -43,32 +43,64 @@ export default function LocationPicker({ value, onChange }: Props) {
   const [pendingResult, setPendingResult] = useState<LocationResult | null>(null);
   const mapRef = useRef<MapView>(null);
 
+  // Request permission and open modal
+  const openModal = async () => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      alert('Location permission is required to use this feature.');
+      return;
+    }
+    setModalVisible(true);
+  };
+
   // Reverse geocode coordinates → address string
   const reverseGeocode = async (lat: number, lng: number) => {
     setResolving(true);
     try {
-      const results = await Location.reverseGeocodeAsync({ latitude: lat, longitude: lng });
+      // Ensure permission is still granted
+      const { status } = await Location.getForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        const { status: newStatus } = await Location.requestForegroundPermissionsAsync();
+        if (newStatus !== 'granted') {
+          alert('Location permission is required.');
+          return;
+        }
+      }
+
+      const results = await Location.reverseGeocodeAsync(
+        { latitude: lat, longitude: lng },
+       
+      );
+
       if (results.length > 0) {
         const r = results[0];
-        // Build human-readable address: "Shop Name, Street, City, Region"
+        console.log('Raw geocode result:', r);
+
         const parts = [
           r.name,
+          r.streetNumber,
           r.street,
           r.district,
           r.city,
           r.region,
         ].filter(p => p && p.trim() !== '');
 
-        // Remove duplicates (sometimes name === street)
         const unique = [...new Set(parts)];
         const formatted = unique.join(', ');
 
         setAddress(formatted);
         setSearch(formatted);
         setPendingResult({ address: formatted, latitude: lat, longitude: lng });
+      } else {
+        const fallback = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        setAddress(fallback);
+        setPendingResult({ address: fallback, latitude: lat, longitude: lng });
       }
     } catch (e) {
       console.warn('Geocode error:', e);
+      const fallback = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+      setAddress(fallback);
+      setPendingResult({ address: fallback, latitude: lat, longitude: lng });
     } finally {
       setResolving(false);
     }
@@ -92,6 +124,7 @@ export default function LocationPicker({ value, onChange }: Props) {
       }
     } catch (e) {
       console.warn('Search error:', e);
+      alert('Error searching location. Please try again.');
     } finally {
       setResolving(false);
     }
@@ -115,16 +148,17 @@ export default function LocationPicker({ value, onChange }: Props) {
       await reverseGeocode(latitude, longitude);
     } catch (e) {
       console.warn('Location error:', e);
+      alert('Error getting current location.');
     } finally {
       setLocating(false);
     }
   };
 
-  // Tap on map
-  const handleMapPress = async (e: LongPressEvent) => {
+  // Handle map long press
+  const handleMapLongPress = (e: any) => {
     const { latitude, longitude } = e.nativeEvent.coordinate;
     setMarker({ latitude, longitude });
-    await reverseGeocode(latitude, longitude);
+    reverseGeocode(latitude, longitude);
   };
 
   // Confirm selection
@@ -138,10 +172,11 @@ export default function LocationPicker({ value, onChange }: Props) {
   return (
     <>
       <StatusBar style="light" backgroundColor="#6C5CE7" />
+
       {/* Trigger field */}
       <TouchableOpacity
         style={styles.inputRow}
-        onPress={() => setModalVisible(true)}
+        onPress={openModal}
         activeOpacity={0.7}
         accessible
         accessibilityRole="button"
@@ -156,7 +191,7 @@ export default function LocationPicker({ value, onChange }: Props) {
       {/* Full-screen modal */}
       <Modal visible={modalVisible} animationType="slide" statusBarTranslucent>
         <SafeAreaView style={styles.modal}>
-  
+
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.backBtn}>
@@ -189,13 +224,15 @@ export default function LocationPicker({ value, onChange }: Props) {
             <Ionicons name="hand-left-outline" size={13} color="#999" />
             <Text style={styles.hintText}>Long press on the map to drop a pin</Text>
           </View>
-          <View style={styles.mapContainer} pointerEvents="box-none">
+
+          {/* Map */}
+          <View style={styles.mapContainer}>
             <MapView
               ref={mapRef}
-              style={StyleSheet.absoluteFillObject}
+              style={styles.map}
               region={region}
               onRegionChangeComplete={setRegion}
-              onLongPress={handleMapPress}
+              onLongPress={handleMapLongPress}
               showsUserLocation
               showsMyLocationButton={false}
               zoomEnabled
@@ -207,7 +244,12 @@ export default function LocationPicker({ value, onChange }: Props) {
                 <Marker
                   coordinate={marker}
                   pinColor={PURPLE}
-                  tappable={false}
+                  draggable
+                  onDragEnd={(e) => {
+                    const { latitude, longitude } = e.nativeEvent.coordinate;
+                    setMarker({ latitude, longitude });
+                    reverseGeocode(latitude, longitude);
+                  }}
                 />
               )}
             </MapView>
@@ -225,13 +267,20 @@ export default function LocationPicker({ value, onChange }: Props) {
             </TouchableOpacity>
           </View>
 
-          {/* Selected address preview */}
-          {address ? (
-            <View style={styles.addressPreview}>
-              <Ionicons name="location" size={16} color={PURPLE} />
-              <Text style={styles.addressText} numberOfLines={2}>{address}</Text>
-            </View>
-          ) : null}
+          {/* Address preview */}
+          <View style={styles.addressPreview}>
+            <Ionicons name="location" size={16} color={PURPLE} />
+            {resolving ? (
+              <View style={styles.addressLoading}>
+                <ActivityIndicator size="small" color={PURPLE} />
+                <Text style={styles.resolvingText}>Getting address details...</Text>
+              </View>
+            ) : (
+              <Text style={styles.addressText} numberOfLines={2}>
+                {address || 'Long press on map to select location'}
+              </Text>
+            )}
+          </View>
 
           {/* Set Location button */}
           <TouchableOpacity
@@ -249,7 +298,6 @@ export default function LocationPicker({ value, onChange }: Props) {
 }
 
 const styles = StyleSheet.create({
-  // Trigger
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -264,7 +312,6 @@ const styles = StyleSheet.create({
   inputText: { flex: 1, fontSize: 14, color: '#333' },
   placeholder: { color: '#aaa' },
 
-  // Modal
   modal: { flex: 1, backgroundColor: '#fff' },
 
   header: {
@@ -279,7 +326,6 @@ const styles = StyleSheet.create({
   backBtn: { padding: 4 },
   headerTitle: { fontSize: 16, fontWeight: '600', color: '#222' },
 
-  // Search
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -312,7 +358,8 @@ const styles = StyleSheet.create({
     flex: 1,
     position: 'relative',
   },
-  map: { ...StyleSheet.absoluteFillObject },
+  map: { flex: 1 },
+
   gpsBtn: {
     position: 'absolute',
     right: 12,
@@ -330,7 +377,6 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
 
-  // Address preview
   addressPreview: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -339,10 +385,26 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderTopWidth: 1,
     borderTopColor: '#f0f0f0',
+    backgroundColor: '#fff',
+    minHeight: 60,
   },
-  addressText: { flex: 1, fontSize: 13, color: '#444', lineHeight: 18 },
+  addressText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#444',
+    lineHeight: 18,
+  },
+  addressLoading: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  resolvingText: {
+    fontSize: 12,
+    color: PURPLE,
+  },
 
-  // Set Location button
   setBtn: {
     margin: 16,
     marginTop: 8,

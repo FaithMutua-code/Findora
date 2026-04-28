@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useContext } from 'react'
+import { createContext, useState, useEffect } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
 interface AuthUser {
@@ -17,7 +17,7 @@ interface AuthContextType {
   setAuthData: (data: AuthData | null) => void
   login: (data: AuthData) => void
   logout: () => void
-  isLoading: boolean  // ← add this
+  isLoading: boolean  
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } catch (e) {
         console.error('Failed to load auth:', e)
       } finally {
-        setIsLoading(false)  // ← done loading either way
+        setIsLoading(false)  
       }
     }
     loadAuth()
