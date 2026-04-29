@@ -16,7 +16,12 @@ class Item extends Model
         'latitude',
         'longitude',
         'type',
-        'image'
+        'image',
+        'status',
+        'recovery_method',
+        'recovery_notes',
+        'recovered_at',
+        'recovered_by',
     ];
    public function user()
    {

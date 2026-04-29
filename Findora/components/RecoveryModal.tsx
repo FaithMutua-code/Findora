@@ -56,8 +56,8 @@ export default function RecoveryModal({ visible, itemId, itemTitle, token, onClo
     }
     setLoading(true);
     try {
-      await axios.post(
-        `${API_URL}/api/items/${itemId}/recover`,
+      await axios.patch(
+        `${API_URL}/api/items/${itemId}/return`,
         { recovery_method: method, recovery_notes: notes },
         { headers: { Authorization: `Bearer ${token}` } }
       );
