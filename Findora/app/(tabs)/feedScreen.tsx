@@ -13,12 +13,13 @@ import * as Linking from 'expo-linking';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { StatusBar } from 'expo-status-bar';
 import { useTheme } from '@/utils/ThemeContext';
-
+import RecoveryModal from '@/components/RecoveryModal';
 type User = { id: number; name: string };
 type Item = {
   id: number; title: string; description: string; category: string;
   location: string; date_lost_found: string; type: 'lost' | 'found';
   image?: string; user?: User; user_id: number; created_at?: string;
+  status:'active'|'returned';recovery_method?: string; recovery_notes?: string;recovered_at?: string; 
 };
 
 export default function FeedScreen() {
@@ -37,7 +38,7 @@ export default function FeedScreen() {
   const [searchType, setSearchType] = useState<'name' | 'location'>('name');
   const [filterType, setFilterType] = useState<'all' | 'lost' | 'found'>('all');
   const [showSearchModal, setShowSearchModal] = useState(false);
-
+const [recoveringItem, setRecoveringItem] = useState<Item | null>(null);
   const context = useContext(AuthContext);
   if (!context) throw new Error('useAuth must be used inside AuthProvider');
   const { authData } = context;
@@ -146,7 +147,9 @@ export default function FeedScreen() {
     const handleShare = async () => {
       const deepLink = Linking.createURL(`items/${item.id}`);
       await Share.share({ message: `Check out ${item.title} on Findora!\n${deepLink}`, title: item.title });
+      
     };
+    
 
     return (
       <View style={[styles.card, { backgroundColor: colors.card }]}>
@@ -202,6 +205,23 @@ export default function FeedScreen() {
             <Ionicons name="share-outline" size={22} color={colors.icon} />
             <Text style={[styles.actionText, { color: colors.subtext }]}>Share</Text>
           </TouchableOpacity>
+{Number(authData?.user?.id) === item.user_id && item.status !== 'returned' && (
+  <TouchableOpacity
+    style={styles.actionBtn}
+    onPress={() => setRecoveringItem(item)}
+  >
+    <Ionicons name="checkmark-done-circle-outline" size={22} color="#2ecc71" />
+    <Text style={[styles.actionText, { color: colors.subtext }]}>Recovered</Text>
+  </TouchableOpacity>
+)}
+
+
+{item.status === 'returned' && (
+  <View style={styles.returnedBadge}>
+    <Ionicons name="checkmark-circle" size={12} color="#2ecc71" />
+    <Text style={styles.returnedText}>Recovered</Text>
+  </View>
+)}
         </View>
       </View>
     );
@@ -478,6 +498,19 @@ export default function FeedScreen() {
           </View>
         </TouchableOpacity>
       </Modal>
+      {recoveringItem && (
+  <RecoveryModal
+    visible={!!recoveringItem}
+    itemId={recoveringItem.id}
+    itemTitle={recoveringItem.title}
+    token={authData?.token || ''}
+    onClose={() => setRecoveringItem(null)}
+    onSuccess={() => {
+      setRecoveringItem(null);
+      fetchItems(currentPage, searchQuery, searchType, filterType);
+    }}
+  />
+)}
     </SafeAreaView>
   );
 }
@@ -511,6 +544,12 @@ const styles = StyleSheet.create({
     elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1, shadowRadius: 2,
   },
+  returnedBadge: {
+  flexDirection: 'row', alignItems: 'center', gap: 4,
+  backgroundColor: '#e6f9ee', paddingHorizontal: 8,
+  paddingVertical: 3, borderRadius: 10, marginLeft: 'auto',
+},
+returnedText: { fontSize: 11, color: '#2ecc71', fontWeight: '600' },
   header: { flexDirection: 'row', alignItems: 'center', padding: 12 },
   avatar: {
     width: 44, height: 44, borderRadius: 22, backgroundColor: '#6C5CE7',

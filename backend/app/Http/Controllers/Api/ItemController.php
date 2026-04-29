@@ -49,6 +49,9 @@ class ItemController extends Controller
                   ->having('distance', '<=', $radius)
                   ->orderBy('distance');
         }
+            if ($request->filled('status')) {
+        $query->where('status', $request->status);
+                }
 
         // 📄 PAGINATION
         $items = $query->paginate(5);
@@ -157,5 +160,66 @@ public function findMatches($id)
     }
 
     return response()->json($matches);
+}
+
+public function markAsReturned(Request $request, $id)
+{
+    $item = Item::with('user')->findOrFail($id);
+
+    // Only the item owner or admin can mark as returned
+    if ($request->user()->id !== $item->user_id) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Unauthorized'
+        ], 403);
+    }
+
+    if ($item->status === 'returned') {
+        return response()->json([
+            'status' => false,
+            'message' => 'Item is already marked as returned'
+        ], 400);
+    }
+
+    $data = $request->validate([
+        'recovery_method' => 'required|in:system_match,direct_contact,admin_assisted',
+        'recovery_notes'  => 'nullable|string|max:500',
+    ]);
+
+    $item->update([
+        'status'          => 'returned',
+        'recovery_method' => $data['recovery_method'],
+        'recovery_notes'  => $data['recovery_notes'] ?? null,
+        'recovered_at'    => now(),
+        'recovered_by'    => $request->user()->id,
+    ]);
+
+    return response()->json([
+        'status'  => true,
+        'message' => 'Item marked as returned successfully',
+        'item'    => $item,
+    ]);
+}
+
+public function recoveryStats()
+{
+    $total    = Item::count();
+    $active   = Item::where('status', 'active')->count();
+    $returned = Item::where('status', 'returned')->count();
+
+    $byMethod = Item::where('status', 'returned')
+        ->selectRaw('recovery_method, count(*) as count')
+        ->groupBy('recovery_method')
+        ->get();
+
+    return response()->json([
+        'status' => true,
+        'stats'  => [
+            'total'     => $total,
+            'active'    => $active,
+            'returned'  => $returned,
+            'by_method' => $byMethod,
+        ],
+    ]);
 }
 }

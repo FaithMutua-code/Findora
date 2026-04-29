@@ -22,7 +22,7 @@ function RootLayoutNav() {
       if (url) handleDeepLink(url);
     });
     return () => subscription.remove();
-  }, []);
+  }, );
 
   // Auth redirect
   useEffect(() => {

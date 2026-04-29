@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/utils/ThemeContext';
 
 function CustomTabBar({ state, descriptors, navigation }: any) {
-  const { colors, isDark } = useTheme(); // ← fix: colors not color
+  const { colors } = useTheme();
 
   return (
     <View style={styles.tabBarWrapper}>

@@ -22,6 +22,8 @@ Route::middleware('auth:sanctum')->group(function () {
       Route::get('/items/{id}', [ItemController::class, 'show']);
       Route::get('/matches/{id}', [ItemController::class, 'findMatches']);
     Route::get('/messages/{userId}', [MessageController::class, 'fetch']);
+       Route::post('/items/{id}/recover', [ItemController::class, 'markAsReturned']);
+    Route::get('/recovery-stats', [ItemController::class, 'recoveryStats']);
     Route::post('/messages', [MessageController::class, 'send']);
     Route::post('/fcm-token',[UserController::class, 'updateFcmToken']);
 });
