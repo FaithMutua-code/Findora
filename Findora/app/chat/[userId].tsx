@@ -269,7 +269,7 @@ export default function ChatScreen() {
 
   return (
      <>
-       <StatusBar style="light" backgroundColor="#6C5CE7" />
+       <StatusBar style="dark" />
      
     <SafeAreaView style={styles.safeArea}>
       {/* Header */}

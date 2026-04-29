@@ -1,6 +1,7 @@
 import React, { useContext,useState,useEffect } from 'react';
 import {
     Alert,
+    Switch,
   View,
   Text,
   StyleSheet,
@@ -12,13 +13,13 @@ import { useRouter } from 'expo-router';
 import axios from 'axios';
 import { AuthContext } from '@/utils/AuthContext';
 import {API_URL } from '@/config';
-
+import { useTheme } from '@/utils/ThemeContext';
 export default function SettingsScreen() {
   const router = useRouter();
   const context = useContext(AuthContext);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-
+  const { isDark, toggleTheme, colors } = useTheme();
   if (!context) {
     throw new Error('useAuth must be used inside AuthProvider');
   }
@@ -94,6 +95,18 @@ useEffect(() => {
       icon: 'information-circle-outline',
       onPress: () => {},
     },
+       {
+      title: 'Dark Mode',
+      icon: 'moon-outline',
+      right: (
+        <Switch
+          value={isDark}
+          onValueChange={toggleTheme}
+          trackColor={{ false: '#e4dff7', true: '#6C5CE7' }}
+          thumbColor={isDark ? '#fff' : '#f0eeff'}
+        />
+      ),
+    },
   ];
 
   const confirmLogout = () => {
@@ -110,59 +123,57 @@ useEffect(() => {
         style: 'destructive',
         onPress: handleLogout,
       },
+      
     ]
   );
 };
 
-  return (
-    <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Settings</Text>
-        <Text style={styles.subtitle}>Manage your account & preferences</Text>
+return (
+  <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+    {/* Header */}
+    <View style={styles.header}>
+      <Text style={[styles.title, { color: colors.text }]}>Settings</Text>
+      <Text style={[styles.subtitle, { color: colors.subtext }]}>Manage your account & preferences</Text>
+    </View>
+
+    {/* Profile Card */}
+    <View style={[styles.profileCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <View style={styles.avatar}>
+        <Ionicons name="person" size={30} color="#fff" />
       </View>
-
-      {/* Profile Card */}
-      <View style={styles.profileCard}>
-        <View style={styles.avatar}>
-          <Ionicons name="person" size={30} color="#fff" />
-        </View>
-
-        <View style={{ flex: 1 }}>
-          <Text style={styles.name}>{loading ? 'Loading...' : user?.name || 'Your Name'}</Text>
-          <Text style={styles.email}>{loading ? 'Loading...' : user?.email || 'youremail@gmail.com'}</Text>
-          
-        </View>
-
-       
+      <View style={{ flex: 1 }}>
+        <Text style={[styles.name, { color: colors.text }]}>{loading ? 'Loading...' : user?.name || 'Your Name'}</Text>
+        <Text style={[styles.email, { color: colors.subtext }]}>{loading ? 'Loading...' : user?.email || 'youremail@gmail.com'}</Text>
       </View>
+    </View>
 
-      {/* Settings List */}
-      <View style={styles.section}>
-        {settingsItems.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            style={styles.item}
-            onPress={item.onPress}
-          >
-            <View style={styles.itemLeft}>
-              <Ionicons name={item.icon as any} size={22} color="#6C5CE7" />
-              <Text style={styles.itemText}>{item.title}</Text>
-            </View>
+    {/* Settings List */}
+    <View style={[styles.section, { backgroundColor: colors.card }]}>
+      {settingsItems.map((item, index) => (
+        <TouchableOpacity
+          key={index}
+          style={[styles.item, { borderBottomColor: colors.border }]}
+          onPress={item.onPress}
+        >
+          <View style={styles.itemLeft}>
+            <Ionicons name={item.icon as any} size={22} color="#6C5CE7" />
+            <Text style={[styles.itemText, { color: colors.text }]}>{item.title}</Text>
+          </View>
+          {item.right
+            ? item.right
+            : <Ionicons name="chevron-forward" size={20} color={colors.icon} />
+          }
+        </TouchableOpacity>
+      ))}
+    </View>
 
-            <Ionicons name="chevron-forward" size={20} color="#ccc" />
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* Logout Button */}
-      <TouchableOpacity style={styles.logoutButton}
-      onPress={confirmLogout}>
-        <Ionicons name="log-out-outline" size={22} color="#fff" />
-        <Text style={styles.logoutText}>Logout</Text>
-      </TouchableOpacity>
-    </ScrollView>
-  );
+    {/* Logout */}
+    <TouchableOpacity style={styles.logoutButton} onPress={confirmLogout}>
+      <Ionicons name="log-out-outline" size={22} color="#fff" />
+      <Text style={styles.logoutText}>Logout</Text>
+    </TouchableOpacity>
+  </ScrollView>
+);
 }
 
 const styles = StyleSheet.create({

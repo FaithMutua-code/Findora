@@ -1,0 +1,82 @@
+// utils/ThemeContext.tsx
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useColorScheme } from 'react-native';
+
+type Theme = 'light' | 'dark';
+
+interface ThemeContextType {
+  theme: Theme;
+  toggleTheme: () => void;
+  isDark: boolean;
+  colors: typeof darkColors;
+}
+
+const lightColors = {
+  background: '#f0eeff',
+  card: '#ffffff',
+  text: '#1a1040',
+  subtext: '#7c6fa0',
+  border: '#e4dff7',
+  input: '#faf9ff',
+  placeholder: '#c4bce8',
+  icon: '#a89fd0',
+  tabBar: '#ffffff',
+  header: '#ffffff',
+};
+
+const darkColors = {
+  background: '#0f0a1e',
+  card: '#1a1035',
+  text: '#f0eeff',
+  subtext: '#a89fd0',
+  border: '#2d2060',
+  input: '#150d30',
+  placeholder: '#5a4a8a',
+  icon: '#7c6fa0',
+  tabBar: '#120c28',
+  header: '#120c28',
+};
+
+export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
+  const systemScheme = useColorScheme();
+  const [theme, setTheme] = useState<Theme>('light');
+
+  // Load saved theme on start
+  useEffect(() => {
+    const loadTheme = async () => {
+      const saved = await AsyncStorage.getItem('theme');
+      if (saved === 'dark' || saved === 'light') {
+        setTheme(saved);
+      } else {
+        setTheme(systemScheme === 'dark' ? 'dark' : 'light');
+      }
+    };
+    loadTheme();
+  }, []);
+
+  const toggleTheme = async () => {
+    const next = theme === 'light' ? 'dark' : 'light';
+    setTheme(next);
+    await AsyncStorage.setItem('theme', next);
+  };
+
+  return (
+    <ThemeContext.Provider value={{
+      theme,
+      toggleTheme,
+      isDark: theme === 'dark',
+      colors: theme === 'dark' ? darkColors : lightColors,
+    }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
+
+export const useTheme = () => {
+  const context = useContext(ThemeContext);
+  if (!context) throw new Error('Must be inside ThemeProvider');
+  return context;
+};

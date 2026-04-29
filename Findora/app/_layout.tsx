@@ -4,6 +4,7 @@ import { AuthContext, AuthProvider } from "../utils/AuthContext";
 import { useContext, useEffect } from "react";
 import { View, ActivityIndicator } from "react-native";
 import * as Linking from 'expo-linking';
+import { ThemeProvider } from "@/utils/ThemeContext";
 
 function RootLayoutNav() {
   const context = useContext(AuthContext);
@@ -58,7 +59,7 @@ function RootLayoutNav() {
 
   return (
     <>
-      <StatusBar style="light" backgroundColor="#6C5CE7" />
+      <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false }}>
         {authData?.token == null ? (
           <>
@@ -80,7 +81,9 @@ function RootLayoutNav() {
 export default function RootLayout() {
   return (
     <AuthProvider>
+      <ThemeProvider>
       <RootLayoutNav />
+      </ThemeProvider>
     </AuthProvider>
   );
 }
