@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text } from 'react-native'; // Added Text
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -57,8 +57,17 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
               <Ionicons
                 name={icon}
                 size={24}
-                color={isFocused ? '#6C5CE7' : colors.icon} // ← dynamic icon color
+                color={isFocused ? '#6C5CE7' : colors.icon}
               />
+              {/* Optional: Add labels for better UX */}
+              {options.title && (
+                <Text style={[
+                  styles.tabLabel,
+                  { color: isFocused ? '#6C5CE7' : colors.icon }
+                ]}>
+                  {options.title}
+                </Text>
+              )}
             </TouchableOpacity>
           );
         })}
@@ -72,21 +81,51 @@ export default function TabLayout() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <StatusBar style={isDark ? 'light' : 'dark'} /> {/* ← dynamic status bar */}
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <Tabs
         tabBar={(props) => <CustomTabBar {...props} />}
         screenOptions={{
           headerShown: false,
           headerStyle: { backgroundColor: colors.header },
-          headerTintColor: colors.text,            // ← fixed: was empty
+          headerTintColor: colors.text,
           headerTitleStyle: { fontWeight: 'bold' },
         }}
       >
-        <Tabs.Screen name="index"      options={{ title: 'Home' }} />
-        <Tabs.Screen name="feedScreen" options={{ title: 'Items' }} />
-        <Tabs.Screen name="shareItem"  options={{ title: 'Share' }} />
-        <Tabs.Screen name="profile"    options={{ title: 'Profile' }} />
-        <Tabs.Screen name="settings"   options={{ title: 'Settings' }} />
+        <Tabs.Screen 
+          name="index"      
+          options={{ 
+            title: 'Home',
+            tabBarLabel: 'Home'  // Add tabBarLabel for accessibility
+          }} 
+        />
+        <Tabs.Screen 
+          name="feedScreen" 
+          options={{ 
+            title: 'Items',
+            tabBarLabel: 'Items'
+          }} 
+        />
+        <Tabs.Screen 
+          name="shareItem"  
+          options={{ 
+            title: 'Share',
+            tabBarLabel: 'Share'
+          }} 
+        />
+        <Tabs.Screen 
+          name="profile"    
+          options={{ 
+            title: 'Profile',
+            tabBarLabel: 'Profile'
+          }} 
+        />
+        <Tabs.Screen 
+          name="settings"   
+          options={{ 
+            title: 'Settings',
+            tabBarLabel: 'Settings'
+          }} 
+        />
       </Tabs>
     </SafeAreaView>
   );
@@ -113,6 +152,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 4,
   },
   centerButton: {
     width: 54,
@@ -127,5 +167,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.45,
     shadowRadius: 10,
     elevation: 10,
+  },
+  tabLabel: {
+    fontSize: 10,
+    marginTop: 2,
+    fontWeight: '500',
   },
 });

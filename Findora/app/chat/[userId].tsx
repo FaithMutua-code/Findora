@@ -107,7 +107,6 @@ export default function ChatScreen() {
         });
         setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 80);
 
-        // Show notification only when app is backgrounded
         if (AppState.currentState !== 'active') {
           showLocalNotification(
             String(userName ?? 'New message'),
