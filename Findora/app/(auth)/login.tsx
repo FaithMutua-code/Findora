@@ -79,8 +79,8 @@ export default function Login() {
       {/* Background blobs */}
 <View style={[styles.blob, { width: 260, height: 260, top: -70,    left: -50,  backgroundColor: colors.blob1, opacity: 0.7 }]} />
 <View style={[styles.blob, { width: 200, height: 200, top: -40,    right: -60, backgroundColor: colors.blob2, opacity: 0.5 }]} />
-<View style={[styles.blob, { width: 220, height: 220, bottom: -80, right: -60, backgroundColor: colors.blob3, opacity: 0.4 }]} />
-<View style={[styles.blob, { width: 220, height: 220, bottom:-130, left: -60,  backgroundColor: colors.blob3, opacity: 0.4 }]} />
+<View style={[styles.blob, { width: 220, height: 220, bottom: -80, right: -60, backgroundColor: colors.blob1, opacity: 0.03 }]} />
+<View style={[styles.blob, { width: 220, height: 220, bottom:-110, left: -60,  backgroundColor: colors.blob3, opacity: 0.01 }]} />
 
       <View style={styles.content}>
         <Text style={[styles.title, { color: colors.text }]}>Welcome back!</Text>

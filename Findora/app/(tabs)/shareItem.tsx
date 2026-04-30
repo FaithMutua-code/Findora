@@ -31,8 +31,10 @@ export default function ShareItemScreen() {
   const [loading, setLoading] = useState(false);
   const [image, setImage] = useState<string | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [useManualLocation, setUseManualLocation] = useState(false);
   const [form, setForm] = useState({
     title: '', description: '', category: '', location: '',
+    manualLocation: '',
     type: 'lost', date_lost_found: new Date(),
     latitude: null as number | null, longitude: null as number | null,
   });
@@ -52,7 +54,9 @@ export default function ShareItemScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!form.title || !form.description || !form.location) {
+    const finalLocation = useManualLocation ? form.manualLocation : form.location;
+
+    if (!form.title || !form.description || !finalLocation) {
       Alert.alert('Error', 'Fill all required fields'); return;
     }
     if (!form.category) {
@@ -64,11 +68,11 @@ export default function ShareItemScreen() {
       data.append('title', form.title);
       data.append('description', form.description);
       data.append('category', form.category);
-      data.append('location', form.location);
+      data.append('location', finalLocation);
       data.append('type', form.type);
       data.append('date_lost_found', form.date_lost_found.toISOString().split('T')[0]);
-      if (form.latitude !== null) data.append('latitude', String(form.latitude));
-      if (form.longitude !== null) data.append('longitude', String(form.longitude));
+      if (!useManualLocation && form.latitude !== null) data.append('latitude', String(form.latitude));
+      if (!useManualLocation && form.longitude !== null) data.append('longitude', String(form.longitude));
       if (image) data.append('image', { uri: image, name: 'photo.jpg', type: 'image/jpeg' } as any);
 
       const response = await axios.post(`${API_URL}/api/items`, data, {
@@ -85,9 +89,11 @@ export default function ShareItemScreen() {
         onPress: () => {
           setForm({
             title: '', description: '', category: '', location: '',
-            type: 'lost', date_lost_found: new Date(), latitude: null, longitude: null,
+            manualLocation: '', type: 'lost', date_lost_found: new Date(),
+            latitude: null, longitude: null,
           });
           setImage(null);
+          setUseManualLocation(false);
           if (matchResponse.data.length > 0) {
             router.push({ pathname: '/match/matchScreen', params: { id: newItem.id } });
           } else {
@@ -213,12 +219,51 @@ export default function ShareItemScreen() {
             </ScrollView>
 
             {/* LOCATION */}
-            <LocationPicker
-              value={form.location}
-              onChange={({ address, latitude, longitude }) => {
-                setForm({ ...form, location: address, latitude, longitude });
-              }}
-            />
+            <Text style={[styles.categoryLabel, { color: colors.subtext, marginTop: 8 }]}>Location *</Text>
+
+            {!useManualLocation ? (
+              <>
+                <LocationPicker
+                  value={form.location}
+                  onChange={({ address, latitude, longitude }) => {
+                    setForm({ ...form, location: address, latitude, longitude });
+                  }}
+                />
+                <TouchableOpacity
+                  style={styles.locationToggleBtn}
+                  onPress={() => {
+                    setUseManualLocation(true);
+                    setForm({ ...form, location: '', latitude: null, longitude: null });
+                  }}
+                >
+                  <Ionicons name="pencil-outline" size={13} color="#6C5CE7" />
+                  <Text style={styles.locationToggleText}>{"Can't find it on map? Enter manually"}</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <View style={[styles.manualField, { backgroundColor: colors.input, borderColor: colors.border }]}>
+                  <Ionicons name="location-outline" size={16} color={colors.icon} style={{ marginRight: 8 }} />
+                  <TextInput
+                    style={[styles.manualInput, { color: colors.text }]}
+                    placeholder="e.g. Near the library, Block C, Gate 2..."
+                    placeholderTextColor={colors.placeholder}
+                    value={form.manualLocation}
+                    onChangeText={(t) => setForm({ ...form, manualLocation: t })}
+                  />
+                </View>
+                <TouchableOpacity
+                  style={styles.locationToggleBtn}
+                  onPress={() => {
+                    setUseManualLocation(false);
+                    setForm({ ...form, manualLocation: '' });
+                  }}
+                >
+                  <Ionicons name="map-outline" size={13} color="#6C5CE7" />
+                  <Text style={styles.locationToggleText}>Use map instead</Text>
+                </TouchableOpacity>
+              </>
+            )}
           </View>
 
           {/* SUBMIT */}
@@ -265,6 +310,17 @@ const styles = StyleSheet.create({
   chipActive: { backgroundColor: '#6C5CE7' },
   chipText: { fontSize: 13, fontWeight: '500' },
   chipTextActive: { color: '#fff', fontSize: 13, fontWeight: '600' },
+  manualField: {
+    flexDirection: 'row', alignItems: 'center',
+    borderWidth: 1, borderRadius: 10,
+    paddingHorizontal: 12, height: 48, marginBottom: 6,
+  },
+  manualInput: { flex: 1, fontSize: 14 },
+  locationToggleBtn: {
+    flexDirection: 'row', alignItems: 'center',
+    gap: 5, marginTop: 4, marginBottom: 4,
+  },
+  locationToggleText: { fontSize: 12, color: '#6C5CE7', fontWeight: '500' },
   button: { backgroundColor: '#6C5CE7', padding: 15, marginBottom: 50, borderRadius: 12, alignItems: 'center' },
   buttonText: { color: '#fff', fontWeight: '700', fontSize: 16 },
 });

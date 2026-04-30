@@ -41,7 +41,7 @@ const darkColors = {
   header: '#120c28',
   blob1: '#4a3f8f',
   blob2: '#6C5CE7',
-  blob3: '#0d0920',
+  blob3: '#4a3f8f',
 };
 
 export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
