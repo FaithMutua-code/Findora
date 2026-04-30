@@ -8,6 +8,7 @@ import { AuthContext } from '../../utils/AuthContext';
 import axios from 'axios';
 import { API_URL } from '@/config';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '@/utils/ThemeContext';
 
 const PURPLE = '#6C5CE7';
 
@@ -23,6 +24,7 @@ export default function RegisterScreen() {
   const context = useContext(AuthContext);
   if (!context) throw new Error('Must be inside AuthProvider');
   const { setAuthData } = context;
+  const { colors } = useTheme();
 
   const validateForm = () => {
     if (!formData.email.trim()) { Alert.alert('Error', 'Email is required'); return false; }
@@ -73,32 +75,34 @@ export default function RegisterScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    <KeyboardAvoidingView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       {/* Background blobs */}
-      <View style={[styles.blob, { width: 230, height: 230, top: -65, left: -45 , backgroundColor: '#8b7ff0', opacity: 0.7 }]} />
-      <View style={[styles.blob, { width: 170, height: 170, top: -35, right: -50, opacity: 0.5,backgroundColor: '#A29BFE' }]} />
-      <View style={[styles.blob, { width: 190, height: 190, bottom: -75, right: -50,backgroundColor: '#261E63', opacity: 0.4 }]} />
+<View style={[styles.blob, { width: 230, height: 230, top: -65,    left: -45,  backgroundColor: colors.blob1, opacity: 0.7 }]} />
+<View style={[styles.blob, { width: 170, height: 170, top: -35,    right: -50, backgroundColor: colors.blob2, opacity: 0.5 }]} />
+<View style={[styles.blob, { width: 190, height: 190, bottom: -75, right: -50, backgroundColor: colors.blob3, opacity: 0.4 }]} />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
 
           {/* Header */}
           <View style={styles.header}>
-          
-            <Text style={styles.title}>Create account</Text>
-            <Text style={styles.subtitle}>Join Findora — Lost & Found Campus</Text>
+            <Text style={[styles.title, { color: colors.text }]}>Create account</Text>
+            <Text style={[styles.subtitle, { color: colors.subtext }]}>Join Findora — Lost & Found Campus</Text>
           </View>
 
           {/* Card */}
-          <View style={styles.card}>
+          <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
 
-            <Text style={styles.label}>Email</Text>
-            <View style={styles.field}>
-              <Ionicons name="mail-outline" size={15} color="#a89fd0" style={styles.fieldIcon} />
+            <Text style={[styles.label, { color: colors.subtext }]}>Email</Text>
+            <View style={[styles.field, { backgroundColor: colors.input, borderColor: colors.border }]}>
+              <Ionicons name="mail-outline" size={15} color={colors.icon} style={styles.fieldIcon} />
               <TextInput
-                style={styles.fieldInput}
+                style={[styles.fieldInput, { color: colors.text }]}
                 placeholder="you@example.com"
-                placeholderTextColor="#c4bce8"
+                placeholderTextColor={colors.placeholder}
                 value={formData.email}
                 onChangeText={(t) => setFormData({ ...formData, email: t })}
                 autoCapitalize="none"
@@ -107,13 +111,13 @@ export default function RegisterScreen() {
               />
             </View>
 
-            <Text style={styles.label}>Username</Text>
-            <View style={styles.field}>
-              <Ionicons name="person-outline" size={15} color="#a89fd0" style={styles.fieldIcon} />
+            <Text style={[styles.label, { color: colors.subtext }]}>Username</Text>
+            <View style={[styles.field, { backgroundColor: colors.input, borderColor: colors.border }]}>
+              <Ionicons name="person-outline" size={15} color={colors.icon} style={styles.fieldIcon} />
               <TextInput
-                style={styles.fieldInput}
+                style={[styles.fieldInput, { color: colors.text }]}
                 placeholder="yourname"
-                placeholderTextColor="#c4bce8"
+                placeholderTextColor={colors.placeholder}
                 value={formData.username}
                 onChangeText={(t) => setFormData({ ...formData, username: t })}
                 autoCapitalize="none"
@@ -121,13 +125,16 @@ export default function RegisterScreen() {
               />
             </View>
 
-            <Text style={styles.label}>Phone number <Text style={{ color: '#c4bce8', fontWeight: '400' }}>(optional)</Text></Text>
-            <View style={styles.field}>
-              <Ionicons name="call-outline" size={15} color="#a89fd0" style={styles.fieldIcon} />
+            <Text style={[styles.label, { color: colors.subtext }]}>
+              Phone number{' '}
+              <Text style={{ color: colors.placeholder, fontWeight: '400' }}>(optional)</Text>
+            </Text>
+            <View style={[styles.field, { backgroundColor: colors.input, borderColor: colors.border }]}>
+              <Ionicons name="call-outline" size={15} color={colors.icon} style={styles.fieldIcon} />
               <TextInput
-                style={styles.fieldInput}
+                style={[styles.fieldInput, { color: colors.text }]}
                 placeholder="+254 7XX XXX XXX"
-                placeholderTextColor="#c4bce8"
+                placeholderTextColor={colors.placeholder}
                 value={formData.phone_number}
                 onChangeText={(t) => setFormData({ ...formData, phone_number: t })}
                 keyboardType="phone-pad"
@@ -135,37 +142,37 @@ export default function RegisterScreen() {
               />
             </View>
 
-            <Text style={styles.label}>Password</Text>
-            <View style={styles.field}>
-              <Ionicons name="lock-closed-outline" size={15} color="#a89fd0" style={styles.fieldIcon} />
+            <Text style={[styles.label, { color: colors.subtext }]}>Password</Text>
+            <View style={[styles.field, { backgroundColor: colors.input, borderColor: colors.border }]}>
+              <Ionicons name="lock-closed-outline" size={15} color={colors.icon} style={styles.fieldIcon} />
               <TextInput
-                style={styles.fieldInput}
+                style={[styles.fieldInput, { color: colors.text }]}
                 placeholder="Min. 8 characters"
-                placeholderTextColor="#c4bce8"
+                placeholderTextColor={colors.placeholder}
                 value={formData.password}
                 onChangeText={(t) => setFormData({ ...formData, password: t })}
                 secureTextEntry={!showPassword}
                 editable={!loading}
               />
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={15} color="#c4bce8" />
+                <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={15} color={colors.icon} />
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.label}>Confirm password</Text>
-            <View style={styles.field}>
-              <Ionicons name="lock-closed-outline" size={15} color="#a89fd0" style={styles.fieldIcon} />
+            <Text style={[styles.label, { color: colors.subtext }]}>Confirm password</Text>
+            <View style={[styles.field, { backgroundColor: colors.input, borderColor: colors.border }]}>
+              <Ionicons name="lock-closed-outline" size={15} color={colors.icon} style={styles.fieldIcon} />
               <TextInput
-                style={styles.fieldInput}
+                style={[styles.fieldInput, { color: colors.text }]}
                 placeholder="Repeat password"
-                placeholderTextColor="#c4bce8"
+                placeholderTextColor={colors.placeholder}
                 value={formData.password_confirmation}
                 onChangeText={(t) => setFormData({ ...formData, password_confirmation: t })}
                 secureTextEntry={!showConfirmPassword}
                 editable={!loading}
               />
               <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-                <Ionicons name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} size={15} color="#c4bce8" />
+                <Ionicons name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} size={15} color={colors.icon} />
               </TouchableOpacity>
             </View>
 
@@ -183,21 +190,21 @@ export default function RegisterScreen() {
 
             {/* Divider */}
             <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or sign up with</Text>
-              <View style={styles.dividerLine} />
+              <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+              <Text style={[styles.dividerText, { color: colors.subtext }]}>or sign up with</Text>
+              <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
             </View>
 
             {/* Google */}
-            <TouchableOpacity style={styles.googleBtn}>
+            <TouchableOpacity style={[styles.googleBtn, { borderColor: colors.border }]}>
               <Ionicons name="logo-google" size={18} color="#EA4335" />
-              <Text style={styles.googleText}>Continue with Google</Text>
+              <Text style={[styles.googleText, { color: colors.text }]}>Continue with Google</Text>
             </TouchableOpacity>
 
             <View style={styles.loginRow}>
-              <Text style={styles.loginText}>Already have an account? </Text>
+              <Text style={[styles.loginText, { color: colors.subtext }]}>Already have an account? </Text>
               <TouchableOpacity onPress={() => router.push('/(auth)/login')} disabled={loading}>
-                <Text style={styles.loginLink}>Sign in</Text>
+                <Text style={[styles.loginLink, { color: PURPLE }]}>Sign in</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -208,31 +215,25 @@ export default function RegisterScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#6C5CE7' },
-  blob: { position: 'absolute', borderRadius: 999, backgroundColor: PURPLE, opacity: 0.15 },
+  container: { flex: 1, paddingHorizontal: 16 },
+  blob: { position: 'absolute', borderRadius: 999 },
   scrollContent: { flexGrow: 1 },
-  content: { flex: 1, paddingHorizontal: 16, paddingBottom: 30 },
+  content: { flex: 1, paddingBottom: 30 },
   header: { alignItems: 'center', paddingTop: 52, paddingBottom: 18 },
-  logoCircle: {
-    width: 50, height: 50, borderRadius: 15,
-    backgroundColor: PURPLE, alignItems: 'center',
-    justifyContent: 'center', marginBottom: 14,
-  },
-  title: { fontSize: 22, fontWeight: '600', color: '#1a1040', marginBottom: 5 },
-  subtitle: { fontSize: 13, color: '#7c6fa0' },
+  title: { fontSize: 22, fontWeight: '600', marginBottom: 5 },
+  subtitle: { fontSize: 13 },
   card: {
-    backgroundColor: '#fff', borderRadius: 20,
-    padding: 20, borderWidth: 0.5, borderColor: '#e4dff7',
+    borderRadius: 20, padding: 20,
+    borderWidth: 0.5,
   },
-  label: { fontSize: 11, color: '#7c6fa0', fontWeight: '500', marginBottom: 5, letterSpacing: 0.3 },
+  label: { fontSize: 11, fontWeight: '600', marginBottom: 5, letterSpacing: 0.3 },
   field: {
     flexDirection: 'row', alignItems: 'center',
-    borderWidth: 1, borderColor: '#e4dff7',
-    borderRadius: 10, paddingHorizontal: 12,
-    height: 44, backgroundColor: '#faf9ff', marginBottom: 12,
+    borderWidth: 1, borderRadius: 12,
+    paddingHorizontal: 12, height: 44, marginBottom: 12,
   },
   fieldIcon: { marginRight: 8 },
-  fieldInput: { flex: 1, fontSize: 14, color: '#1a1040' },
+  fieldInput: { flex: 1, fontSize: 14 },
   registerBtn: {
     height: 46, backgroundColor: PURPLE,
     borderRadius: 12, alignItems: 'center',
@@ -240,15 +241,15 @@ const styles = StyleSheet.create({
   },
   registerBtnText: { color: '#fff', fontSize: 15, fontWeight: '500' },
   divider: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 },
-  dividerLine: { flex: 1, height: 0.5, backgroundColor: '#e4dff7' },
-  dividerText: { fontSize: 12, color: '#a89fd0' },
+  dividerLine: { flex: 1, height: 0.5 },
+  dividerText: { fontSize: 12 },
   googleBtn: {
-    height: 46, borderWidth: 1, borderColor: '#e4dff7',
+    height: 46, borderWidth: 1,
     borderRadius: 12, flexDirection: 'row',
     alignItems: 'center', justifyContent: 'center', gap: 10,
   },
-  googleText: { fontSize: 14, color: '#1a1040', fontWeight: '500' },
+  googleText: { fontSize: 14, fontWeight: '500' },
   loginRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 16 },
-  loginText: { fontSize: 13, color: '#7c6fa0' },
-  loginLink: { fontSize: 13, color: PURPLE, fontWeight: '500' },
+  loginText: { fontSize: 13 },
+  loginLink: { fontSize: 13, fontWeight: '500' },
 });

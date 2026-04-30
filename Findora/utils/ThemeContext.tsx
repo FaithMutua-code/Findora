@@ -23,6 +23,9 @@ const lightColors = {
   icon: '#a89fd0',
   tabBar: '#ffffff',
   header: '#ffffff',
+  blob1: '#8b7ff0',
+  blob2: '#A29BFE',
+  blob3: '#261E63',
 };
 
 const darkColors = {
@@ -36,26 +39,42 @@ const darkColors = {
   icon: '#7c6fa0',
   tabBar: '#120c28',
   header: '#120c28',
+  blob1: '#4a3f8f',
+  blob2: '#6C5CE7',
+  blob3: '#0d0920',
 };
 
 export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const systemScheme = useColorScheme();
-  const [theme, setTheme] = useState<Theme>('light');
 
-  // Load saved theme on start
+  // ✅ Initialize from system scheme immediately — no flash
+  const [theme, setTheme] = useState<Theme>(systemScheme === 'dark' ? 'dark' : 'light');
+
+  // Load saved user preference on start
   useEffect(() => {
     const loadTheme = async () => {
       const saved = await AsyncStorage.getItem('theme');
       if (saved === 'dark' || saved === 'light') {
+        // User has manually set a preference — respect it
         setTheme(saved);
-      } else {
-        setTheme(systemScheme === 'dark' ? 'dark' : 'light');
       }
+      // If no saved preference, keep the system scheme (already set in useState)
     };
     loadTheme();
   }, []);
+
+  // ✅ Also react if system scheme changes and user has no saved preference
+  useEffect(() => {
+    const syncWithSystem = async () => {
+      const saved = await AsyncStorage.getItem('theme');
+      if (!saved && systemScheme) {
+        setTheme(systemScheme === 'dark' ? 'dark' : 'light');
+      }
+    };
+    syncWithSystem();
+  }, [systemScheme]);
 
   const toggleTheme = async () => {
     const next = theme === 'light' ? 'dark' : 'light';

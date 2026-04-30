@@ -10,6 +10,7 @@ import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import { Ionicons } from '@expo/vector-icons';
 import { EXPO_CLIENT_ID, API_URL } from '@/config';
+import { useTheme } from '@/utils/ThemeContext';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -25,6 +26,7 @@ export default function Login() {
   const context = useContext(AuthContext);
   if (!context) throw new Error('Must be inside AuthProvider');
   const { login } = context;
+  const { colors } = useTheme();
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     clientId: EXPO_CLIENT_ID,
@@ -71,36 +73,33 @@ export default function Login() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       {/* Background blobs */}
-      <View style={[styles.blob, { width: 260, height: 260, top: -70, left: -50, backgroundColor: '#8b7ff0', opacity: 0.7 }]} />
-      <View style={[styles.blob, { width: 200, height: 200, top: -40, right: -60, backgroundColor: '#A29BFE', opacity: 0.5 }]} />
-      <View style={[styles.blob, { width: 220, height: 220, bottom: -80, right: -60,backgroundColor: '#261E63', opacity: 0.4 }]} />
-      <View style={[styles.blob, { width: 220, height: 220, bottom: -130, left: -60,backgroundColor: '#261E63', opacity: 0.4 }]} />
+<View style={[styles.blob, { width: 260, height: 260, top: -70,    left: -50,  backgroundColor: colors.blob1, opacity: 0.7 }]} />
+<View style={[styles.blob, { width: 200, height: 200, top: -40,    right: -60, backgroundColor: colors.blob2, opacity: 0.5 }]} />
+<View style={[styles.blob, { width: 220, height: 220, bottom: -80, right: -60, backgroundColor: colors.blob3, opacity: 0.4 }]} />
+<View style={[styles.blob, { width: 220, height: 220, bottom:-130, left: -60,  backgroundColor: colors.blob3, opacity: 0.4 }]} />
 
       <View style={styles.content}>
-        {/* Logo */}
-  
-
-        <Text style={styles.title}>Welcome back!</Text>
-        <Text style={styles.subtitle}>Sign in to your Findora account</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Welcome back!</Text>
+        <Text style={[styles.subtitle, { color: colors.subtext }]}>Sign in to your Findora account</Text>
 
         {/* Card */}
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           {!!message && (
             <Text style={styles.errorText}>{message}</Text>
           )}
 
           {/* Email */}
-          <Text style={styles.label}>Email</Text>
-          <View style={styles.field}>
-            <Ionicons name="mail-outline" size={16} color="#a89fd0" style={styles.fieldIcon} />
+          <Text style={[styles.label, { color: colors.subtext }]}>Email</Text>
+          <View style={[styles.field, { backgroundColor: colors.input, borderColor: colors.border }]}>
+            <Ionicons name="mail-outline" size={16} color={colors.icon} style={styles.fieldIcon} />
             <TextInput
-              style={styles.fieldInput}
+              style={[styles.fieldInput, { color: colors.text }]}
               placeholder="you@example.com"
-              placeholderTextColor="#c4bce8"
+              placeholderTextColor={colors.placeholder}
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
@@ -110,29 +109,29 @@ export default function Login() {
           </View>
 
           {/* Password */}
-          <Text style={styles.label}>Password</Text>
-          <View style={styles.field}>
-            <Ionicons name="lock-closed-outline" size={16} color="#a89fd0" style={styles.fieldIcon} />
+          <Text style={[styles.label, { color: colors.subtext }]}>Password</Text>
+          <View style={[styles.field, { backgroundColor: colors.input, borderColor: colors.border }]}>
+            <Ionicons name="lock-closed-outline" size={16} color={colors.icon} style={styles.fieldIcon} />
             <TextInput
-              style={styles.fieldInput}
+              style={[styles.fieldInput, { color: colors.text }]}
               placeholder="••••••••"
-              placeholderTextColor="#c4bce8"
+              placeholderTextColor={colors.placeholder}
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
               editable={!loading}
             />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-              <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={16} color="#c4bce8" />
+              <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={16} color={colors.icon} />
             </TouchableOpacity>
           </View>
 
-        <TouchableOpacity
-          style={styles.forgotRow}
-          onPress={() => router.push('/(auth)/forgotPassword')}
-        >
-          <Text style={styles.forgotText}>Forgot password?</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.forgotRow}
+            onPress={() => router.push('/(auth)/forgotPassword')}
+          >
+            <Text style={[styles.forgotText, { color: PURPLE }]}>Forgot password?</Text>
+          </TouchableOpacity>
 
           {/* Sign in button */}
           <TouchableOpacity
@@ -148,26 +147,26 @@ export default function Login() {
 
           {/* Divider */}
           <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or continue with</Text>
-            <View style={styles.dividerLine} />
+            <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+            <Text style={[styles.dividerText, { color: colors.subtext }]}>or continue with</Text>
+            <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
           </View>
 
           {/* Google */}
           <TouchableOpacity
-            style={styles.googleBtn}
+            style={[styles.googleBtn, { borderColor: colors.border }]}
             onPress={() => promptAsync()}
             disabled={!request}
           >
             <Ionicons name="logo-google" size={18} color="#EA4335" />
-            <Text style={styles.googleText}>Continue with Google</Text>
+            <Text style={[styles.googleText, { color: colors.text }]}>Continue with Google</Text>
           </TouchableOpacity>
 
           {/* Register */}
           <View style={styles.registerRow}>
-            <Text style={styles.registerText}>{"Don't have an account? "}</Text>
+            <Text style={[styles.registerText, { color: colors.subtext }]}>{"Don't have an account? "}</Text>
             <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
-              <Text style={styles.registerLink}>Register</Text>
+              <Text style={[styles.registerLink, { color: PURPLE }]}>Register</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -177,51 +176,41 @@ export default function Login() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#6C5CE7' },
-  blob: {
-    position: 'absolute', borderRadius: 999,
-    backgroundColor: '#6C5CE7'
-  },
+  container: { flex: 1, paddingHorizontal: 20 },
+  blob: { position: 'absolute', borderRadius: 999 },
   content: {
     flex: 1, justifyContent: 'center',
-    paddingHorizontal: 20, paddingTop: 20,
-  },
-  logoCircle: {
-    width: 52, height: 52, borderRadius: 16,
-    backgroundColor: PURPLE,
-    alignItems: 'center', justifyContent: 'center',
-    alignSelf: 'center', marginBottom: 16,
+    paddingTop: 20,
   },
   title: {
-    fontSize: 24, fontWeight: '600', color: '#1a1040',
+    fontSize: 24, fontWeight: '600',
     textAlign: 'center', marginBottom: 6,
   },
   subtitle: {
-    fontSize: 13, color: 'black',
+    fontSize: 13,
     textAlign: 'center', marginBottom: 24,
   },
   card: {
-    backgroundColor: '#fff', borderRadius: 20,
-    padding: 24, borderWidth: 0.5, borderColor: '#e4dff7',
+    borderRadius: 20, padding: 24,
+    borderWidth: 0.5,
   },
   errorText: {
     color: 'red', fontSize: 13,
     textAlign: 'center', marginBottom: 12,
   },
   label: {
-    fontSize: 12, color: '#7c6fa0',
-    fontWeight: '500', marginBottom: 6,
+    fontSize: 11, fontWeight: '600',
+    marginBottom: 6, letterSpacing: 0.3,
   },
   field: {
     flexDirection: 'row', alignItems: 'center',
-    borderWidth: 1, borderColor: '#e4dff7',
-    borderRadius: 10, paddingHorizontal: 12,
-    height: 48, backgroundColor: '#faf9ff', marginBottom: 14,
+    borderWidth: 1, borderRadius: 12,
+    paddingHorizontal: 14, height: 48, marginBottom: 14,
   },
   fieldIcon: { marginRight: 8 },
-  fieldInput: { flex: 1, fontSize: 14, color: '#1a1040' },
+  fieldInput: { flex: 1, fontSize: 14 },
   forgotRow: { alignItems: 'flex-end', marginTop: -6, marginBottom: 18 },
-  forgotText: { fontSize: 12, color: PURPLE },
+  forgotText: { fontSize: 12 },
   signinBtn: {
     height: 48, backgroundColor: PURPLE,
     borderRadius: 12, alignItems: 'center',
@@ -232,18 +221,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     gap: 10, marginBottom: 14,
   },
-  dividerLine: { flex: 1, height: 0.5, backgroundColor: '#e4dff7' },
-  dividerText: { fontSize: 12, color: '#a89fd0' },
+  dividerLine: { flex: 1, height: 0.5 },
+  dividerText: { fontSize: 12 },
   googleBtn: {
-    height: 48, borderWidth: 1, borderColor: '#e4dff7',
+    height: 48, borderWidth: 1,
     borderRadius: 12, flexDirection: 'row',
     alignItems: 'center', justifyContent: 'center',
     gap: 10, marginBottom: 4,
   },
-  googleText: { fontSize: 14, color: '#1a1040', fontWeight: '500' },
+  googleText: { fontSize: 14, fontWeight: '500' },
   registerRow: {
     flexDirection: 'row', justifyContent: 'center', marginTop: 18,
   },
-  registerText: { fontSize: 13, color: '#7c6fa0' },
-  registerLink: { fontSize: 13, color: PURPLE, fontWeight: '500' },
+  registerText: { fontSize: 13 },
+  registerLink: { fontSize: 13, fontWeight: '500' },
 });
